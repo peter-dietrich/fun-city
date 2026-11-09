@@ -1,0 +1,15 @@
+name: Build Fun City
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build Fun City for macOS
+        run: xcodebuild -project FunCity.xcodeproj -scheme FunCity -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
