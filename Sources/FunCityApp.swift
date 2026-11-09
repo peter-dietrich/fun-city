@@ -29,11 +29,15 @@ private struct ArcadeGame: Codable, Identifiable {
                    bundleID: "io.vectordrift.prototype", appPath: nil, artwork: "space", builtIn: true),
         ArcadeGame(id: "siege", title: "VECTOR SIEGE", tagline: "TANK COMBAT / 1 PLAYER",
                    description: "Defend the horizon from a wireframe tank cockpit.",
-                   bundleID: "io.vectorsiege.game", appPath: nil, artwork: "tank", builtIn: true)
+                   bundleID: "io.vectorsiege.game", appPath: nil, artwork: "tank", builtIn: true),
+        ArcadeGame(id: "swarm", title: "VECTOR SWARM", tagline: "SPACE INVASION / 1 PLAYER",
+                   description: "Blast enemy formations, survive diving attacks, rescue wingmen.",
+                   bundleID: "io.vectorswarm.game", appPath: nil, artwork: "swarm", builtIn: true)
     ]
 
     var accent: Color {
-        artwork == "tank" ? Color(red: 0.51, green: 1, blue: 0.59)
+        artwork == "swarm" ? Color(red: 0.9, green: 0.44, blue: 0.9)
+        : artwork == "tank" ? Color(red: 0.51, green: 1, blue: 0.59)
         : artwork == "space" ? Color(red: 0.45, green: 0.82, blue: 1)
         : Color(red: 1, green: 0.72, blue: 0.39)
     }
@@ -360,6 +364,28 @@ private struct CabinetArt: View {
                                                           width: r, height: r)),
                                    with: .color(accent.opacity(0.8)), lineWidth: 2)
                 }
+            } else if kind == "swarm" {
+                for row in 0..<3 {
+                    for column in 0..<8 {
+                        let x = size.width * (0.16 + CGFloat(column) * 0.095)
+                        let y = size.height * (0.2 + CGFloat(row) * 0.18)
+                        var invader = Path()
+                        invader.move(to: CGPoint(x: x, y: y - 9))
+                        invader.addLine(to: CGPoint(x: x - 11, y: y + 5))
+                        invader.addLine(to: CGPoint(x: x - 4, y: y + 3))
+                        invader.addLine(to: CGPoint(x: x + 4, y: y + 3))
+                        invader.addLine(to: CGPoint(x: x + 11, y: y + 5))
+                        invader.closeSubpath()
+                        context.stroke(invader, with: .color(row == 0 ? .orange : accent), lineWidth: 1.8)
+                    }
+                }
+                var fighter = Path()
+                fighter.move(to: CGPoint(x: cx, y: size.height * 0.68))
+                fighter.addLine(to: CGPoint(x: cx - 18, y: size.height * 0.84))
+                fighter.addLine(to: CGPoint(x: cx, y: size.height * 0.78))
+                fighter.addLine(to: CGPoint(x: cx + 18, y: size.height * 0.84))
+                fighter.closeSubpath()
+                context.stroke(fighter, with: .color(.cyan), lineWidth: 2.5)
             } else if kind == "tank" {
                 let horizon = size.height * 0.48
                 var grid = Path()
