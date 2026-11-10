@@ -75,14 +75,15 @@ private final class ArcadeLibrary: ObservableObject {
                FileManager.default.fileExists(atPath: url.path) { return url }
         }
         if let identifier = game.bundleID {
-            return NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier)
+            return GameDistribution.installedURL(forBundleID: identifier)
+                ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier)
         }
         return nil
     }
 
     func play(_ game: ArcadeGame) {
         guard let url = location(for: game) else {
-            message = "Build \(game.title) in Xcode, then use Locate Game to choose the built .app."
+            message = "Choose DOWNLOAD GAME to install \(game.title), or use Locate Game for an existing app."
             return
         }
         let config = NSWorkspace.OpenConfiguration()
@@ -224,6 +225,7 @@ private struct ArcadeLogo: View {
 
 private struct ArcadeLobby: View {
     @StateObject private var library = ArcadeLibrary()
+    @StateObject private var installer = GameReleaseInstaller()
     @State private var selection = "drift"
     private var current: ArcadeGame? {
         library.games.first(where: { $0.id == selection }) ?? library.games.first
@@ -304,12 +306,12 @@ private struct ArcadeLobby: View {
             }
         }
         .alert("FUN CITY", isPresented: Binding(
-            get: { library.message != nil },
-            set: { if !$0 { library.message = nil } }
+            get: { library.message != nil || installer.notice != nil },
+            set: { if !$0 { library.message = nil; installer.notice = nil } }
         )) {
-            Button("OK", role: .cancel) { library.message = nil }
+            Button("OK", role: .cancel) { library.message = nil; installer.notice = nil }
         } message: {
-            Text(library.message ?? "")
+            Text(library.message ?? installer.notice ?? "")
         }
     }
 
@@ -376,6 +378,18 @@ private struct ArcadeLobby: View {
                     }
                     .buttonStyle(.plain)
                     .keyboardShortcut(.return, modifiers: [])
+                    if GameDistribution.forGame(game.id) != nil {
+                        Button {
+                            installer.install(game.id)
+                        } label: {
+                            Label(installer.status[game.id] ?? (library.location(for: game) == nil ? "DOWNLOAD GAME" : "INSTALL / UPDATE"),
+                                  systemImage: "arrow.down.circle")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.purple)
+                        .disabled(installer.isBusy(game.id))
+                        .help("Download an official release from this game's GitHub repository; verify its checksum and install it locally")
+                    }
                     Button {
                         library.locate(game)
                     } label: {
