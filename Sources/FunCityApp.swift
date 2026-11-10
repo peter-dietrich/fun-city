@@ -32,11 +32,19 @@ private struct ArcadeGame: Codable, Identifiable {
                    bundleID: "io.vectorsiege.game", appPath: nil, artwork: "tank", builtIn: true),
         ArcadeGame(id: "vortex", title: "VECTOR VORTEX", tagline: "TUBE SHOOTER / 1 PLAYER",
                    description: "Ride the rim, vaporize the climbers, survive the neon vortex.",
-                   bundleID: "io.vectorvortex.game", appPath: nil, artwork: "vortex", builtIn: true)
+                   bundleID: "io.vectorvortex.game", appPath: nil, artwork: "vortex", builtIn: true),
+        ArcadeGame(id: "swarm", title: "VECTOR SWARM", tagline: "SPACE INVASION / 1 PLAYER",
+                   description: "Blast enemy formations, survive diving attacks, rescue wingmen.",
+                   bundleID: "io.vectorswarm.game", appPath: nil, artwork: "swarm", builtIn: true),
+        ArcadeGame(id: "prism", title: "PRISM HOPPER", tagline: "ISOMETRIC / 1 PLAYER",
+                   description: "Hop through a glowing pyramid, charge prisms, and dodge relentless pursuers.",
+                   bundleID: "io.prismhopper.game", appPath: nil, artwork: "prism", builtIn: true)
     ]
 
     var accent: Color {
-        artwork == "tank" ? Color(red: 0.51, green: 1, blue: 0.59)
+        artwork == "swarm" ? Color(red: 0.9, green: 0.44, blue: 0.9)
+        : artwork == "prism" ? Color(red: 0.65, green: 1, blue: 0.33)
+        : artwork == "tank" ? Color(red: 0.51, green: 1, blue: 0.59)
         : artwork == "space" ? Color(red: 0.45, green: 0.82, blue: 1)
         : artwork == "vortex" ? Color(red: 1, green: 0.30, blue: 0.77)
         : Color(red: 1, green: 0.72, blue: 0.39)
@@ -344,7 +352,49 @@ private struct CabinetArt: View {
                 Gradient(colors: [accent.opacity(0.19), Color(red: 0.02, green: 0.03, blue: 0.08), .black]),
                 startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)))
             let cx = size.width / 2, cy = size.height / 2
-            if kind == "space" {
+            if kind == "prism" {
+                let w = min(size.width / 5.6, size.height / 4.2)
+                let top = size.height * 0.2
+                for row in 0..<5 {
+                    for column in 0...row {
+                        let x = cx + (CGFloat(column) - CGFloat(row) / 2) * w
+                        let y = top + CGFloat(row) * w * 0.42
+                        let tint = (row + column).isMultiple(of: 3) ? accent : Color(red: 0.25, green: 0.76, blue: 1)
+                        var diamond = Path()
+                        diamond.move(to: CGPoint(x: x, y: y-w*0.25))
+                        diamond.addLine(to: CGPoint(x: x+w*0.5, y: y))
+                        diamond.addLine(to: CGPoint(x: x, y: y+w*0.25))
+                        diamond.addLine(to: CGPoint(x: x-w*0.5, y: y))
+                        diamond.closeSubpath()
+                        context.fill(diamond, with: .color(tint.opacity(0.84)))
+                        context.stroke(diamond, with: .color(.white.opacity(0.75)), lineWidth: 1.2)
+                    }
+                }
+                context.fill(Path(ellipseIn: CGRect(x: cx-12, y: top-23, width: 24, height: 24)),
+                             with: .color(accent))
+            } else if kind == "swarm" {
+                for row in 0..<3 {
+                    for column in 0..<8 {
+                        let x = size.width * (0.16 + CGFloat(column) * 0.095)
+                        let y = size.height * (0.2 + CGFloat(row) * 0.18)
+                        var invader = Path()
+                        invader.move(to: CGPoint(x: x, y: y - 9))
+                        invader.addLine(to: CGPoint(x: x - 11, y: y + 5))
+                        invader.addLine(to: CGPoint(x: x - 4, y: y + 3))
+                        invader.addLine(to: CGPoint(x: x + 4, y: y + 3))
+                        invader.addLine(to: CGPoint(x: x + 11, y: y + 5))
+                        invader.closeSubpath()
+                        context.stroke(invader, with: .color(row == 0 ? .orange : accent), lineWidth: 1.8)
+                    }
+                }
+                var fighter = Path()
+                fighter.move(to: CGPoint(x: cx, y: size.height * 0.68))
+                fighter.addLine(to: CGPoint(x: cx - 18, y: size.height * 0.84))
+                fighter.addLine(to: CGPoint(x: cx, y: size.height * 0.78))
+                fighter.addLine(to: CGPoint(x: cx + 18, y: size.height * 0.84))
+                fighter.closeSubpath()
+                context.stroke(fighter, with: .color(.cyan), lineWidth: 2.5)
+            } else if kind == "space" {
                 for i in 0..<50 {
                     let x = CGFloat((i * 137 + 31) % 983) / 983 * size.width
                     let y = CGFloat((i * 181 + 43) % 997) / 997 * size.height
