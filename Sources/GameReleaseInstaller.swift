@@ -150,10 +150,20 @@ final class GameReleaseInstaller: ObservableObject {
                 guard (downloadResponse as? HTTPURLResponse)?.statusCode == 200 else {
                     throw GameDownloadError.unexpectedResponse
                 }
+                // URLSession's download URL is temporary: move the file immediately
+                // before any asynchronous digest or extraction work can begin.
+                let archived = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("fun-city-download-\(UUID().uuidString).zip")
+                try FileManager.default.moveItem(at: download, to: archived)
+                defer { try? FileManager.default.removeItem(at: archived) }
+                let size = try FileManager.default.attributesOfItem(atPath: archived.path)[.size] as? NSNumber
+                guard let size, size.int64Value == Int64(asset.size) else {
+                    throw GameDownloadError.checksumMismatch
+                }
 
                 status[id] = "VERIFYING"
                 let actualDigest = try await Task.detached(priority: .userInitiated) {
-                    let data = try Data(contentsOf: download, options: [.mappedIfSafe])
+                    let data = try Data(contentsOf: archived, options: [.mappedIfSafe])
                     return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
                 }.value
                 guard actualDigest == expectedDigest else { throw GameDownloadError.checksumMismatch }
@@ -162,7 +172,7 @@ final class GameReleaseInstaller: ObservableObject {
                 }
 
                 status[id] = "INSTALLING"
-                let installedURL = try await Self.installArchive(download, spec: spec)
+                let installedURL = try await Self.installArchive(archived, spec: spec)
                 guard Bundle(url: installedURL)?.bundleIdentifier == spec.bundleID else {
                     throw GameDownloadError.invalidBundle
                 }
