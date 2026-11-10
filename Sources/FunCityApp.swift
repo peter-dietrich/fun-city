@@ -29,12 +29,16 @@ private struct ArcadeGame: Codable, Identifiable {
                    bundleID: "io.vectordrift.prototype", appPath: nil, artwork: "space", builtIn: true),
         ArcadeGame(id: "siege", title: "VECTOR SIEGE", tagline: "TANK COMBAT / 1 PLAYER",
                    description: "Defend the horizon from a wireframe tank cockpit.",
-                   bundleID: "io.vectorsiege.game", appPath: nil, artwork: "tank", builtIn: true)
+                   bundleID: "io.vectorsiege.game", appPath: nil, artwork: "tank", builtIn: true),
+        ArcadeGame(id: "vortex", title: "VECTOR VORTEX", tagline: "TUBE SHOOTER / 1 PLAYER",
+                   description: "Ride the rim, vaporize the climbers, survive the neon vortex.",
+                   bundleID: "io.vectorvortex.game", appPath: nil, artwork: "vortex", builtIn: true)
     ]
 
     var accent: Color {
         artwork == "tank" ? Color(red: 0.51, green: 1, blue: 0.59)
         : artwork == "space" ? Color(red: 0.45, green: 0.82, blue: 1)
+        : artwork == "vortex" ? Color(red: 1, green: 0.30, blue: 0.77)
         : Color(red: 1, green: 0.72, blue: 0.39)
     }
 }
@@ -389,6 +393,47 @@ private struct CabinetArt: View {
                 tank.move(to: CGPoint(x: cx, y: horizon + 6))
                 tank.addLine(to: CGPoint(x: cx, y: horizon - 35))
                 context.stroke(tank, with: .color(accent), lineWidth: 2.5)
+            } else if kind == "vortex" {
+                let lanes = 14
+                let outer = min(size.width * 0.40, size.height * 0.46)
+                let inner = outer * 0.14
+                let angle = { (i: Int) -> Double in
+                    Double(i) * .pi * 2 / Double(lanes) - .pi / 2
+                }
+                let tubePoint = { (i: Int, depth: CGFloat) -> CGPoint in
+                    let a = angle(i)
+                    let r = inner + (outer - inner) * depth
+                    return CGPoint(x: cx + CGFloat(cos(a)) * r,
+                                   y: cy + CGFloat(sin(a)) * r)
+                }
+                for ring in 0..<6 {
+                    let depth = CGFloat(ring) / 5
+                    var wire = Path()
+                    for i in 0..<lanes {
+                        let p = tubePoint(i, depth)
+                        if i == 0 { wire.move(to: p) } else { wire.addLine(to: p) }
+                    }
+                    wire.closeSubpath()
+                    context.stroke(wire, with: .color(accent.opacity(0.28 + Double(ring) * 0.11)),
+                                   lineWidth: ring == 5 ? 2.2 : 1)
+                }
+                for i in 0..<lanes {
+                    var spoke = Path()
+                    spoke.move(to: tubePoint(i, 0))
+                    spoke.addLine(to: tubePoint(i, 1))
+                    context.stroke(spoke, with: .color(Color.cyan.opacity(0.42)), lineWidth: 1)
+                }
+                let ship = [tubePoint(0, 0.92), tubePoint(0, 1.1),
+                            tubePoint(1, 1.1), tubePoint(1, 0.92)]
+                var hull = Path()
+                hull.move(to: ship[0])
+                for p in ship.dropFirst() { hull.addLine(to: p) }
+                hull.closeSubpath()
+                context.stroke(hull, with: .color(.white), lineWidth: 2.5)
+                let enemy = tubePoint(6, 0.63)
+                context.stroke(Path(ellipseIn: CGRect(x: enemy.x - 9, y: enemy.y - 9,
+                                                       width: 18, height: 18)),
+                               with: .color(.yellow), lineWidth: 2.5)
             } else {
                 for i in 0..<5 {
                     let radius = CGFloat(18 + i * 20)
