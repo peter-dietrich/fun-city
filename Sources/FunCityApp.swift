@@ -145,6 +145,43 @@ private final class ArcadeLibrary: ObservableObject {
 
 /// Bundled neon cabinet art. If a resource is missing, the original
 /// wireframe cabinet illustration remains available as a fallback.
+/// Short original two-tone cabinet-selection chime. Audio is synthesized in
+/// memory; no sound file downloads and no copyrighted game audio.
+private final class ArcadeChime {
+    static let shared = ArcadeChime()
+    private let engine = AVAudioEngine()
+    private let player = AVAudioPlayerNode()
+    private let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+
+    private init() {
+        engine.attach(player)
+        engine.connect(player, to: engine.mainMixerNode, format: format)
+        try? engine.start()
+    }
+
+    func play() {
+        if !engine.isRunning { try? engine.start() }
+        guard engine.isRunning else { return }
+        let sampleRate = format.sampleRate
+        let frameCount = AVAudioFrameCount(sampleRate * 0.23)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount),
+              let audio = buffer.floatChannelData?.pointee else { return }
+        buffer.frameLength = frameCount
+        for i in 0..<Int(frameCount) {
+            let t = Double(i) / sampleRate
+            let note = t < 0.105 ? 523.25 : 783.99
+            let localT = t < 0.105 ? t : t - 0.105
+            let envelope = min(1, localT * 110) * exp(-localT * 21) *
+                           max(0, min(1, (0.23 - t) * 24))
+            let wave = sin(2 * Double.pi * note * localT) +
+                       0.13 * sin(2 * Double.pi * note * 2 * localT)
+            audio[i] = Float(0.16 * wave * envelope)
+        }
+        player.scheduleBuffer(buffer, completionHandler: nil)
+        if !player.isPlaying { player.play() }
+    }
+}
+
 private struct ArcadeLogo: View {
     let name: String
     @State private var illuminated = false
@@ -246,7 +283,7 @@ private struct ArcadeLobby: View {
                     }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 18)], spacing: 18) {
                         ForEach(library.games) { game in
-                            Button { selection = game.id } label: {
+                            Button { ArcadeChime.shared.play(); selection = game.id } label: {
                                 CabinetCard(game: game, selected: current?.id == game.id,
                                             available: library.location(for: game) != nil)
                             }
@@ -328,6 +365,7 @@ private struct ArcadeLobby: View {
                 Spacer(minLength: 0)
                 HStack(spacing: 10) {
                     Button {
+                        ArcadeChime.shared.play()
                         library.play(game)
                     } label: {
                         Label("PLAY NOW", systemImage: "play.fill")
