@@ -4,7 +4,7 @@ _Audit date: November 9, 2026 (America/Denver). Covers **the Fun City arcade fam
 
 | Project | Repository | Runtime | Bundle identifier | Role | License |
 |---|---|---|---|---|---|
-| Fun City | [fun-city](https://github.com/peter-dietrich/fun-city) | macOS 13+ | See Xcode target settings | Launcher / downloader | MIT |
+| Fun City | [fun-city](https://github.com/peter-dietrich/fun-city) | macOS 13+ | `io.funcity.arcade` | Launcher / downloader | MIT |
 | Vector Drift | [vector-drift](https://github.com/peter-dietrich/vector-drift) | macOS 13+ | `io.vectordrift.prototype` | Space shooter | MIT |
 | Vector Siege | [vector-siege](https://github.com/peter-dietrich/vector-siege) | macOS 13+ | `io.vectorsiege.game` | First-person tank shooter | MIT |
 | Vector Swarm | [vector-swarm](https://github.com/peter-dietrich/vector-swarm) | macOS 13+ | `io.vectorswarm.game` | Formation shooter | MIT (added in this audit) |
