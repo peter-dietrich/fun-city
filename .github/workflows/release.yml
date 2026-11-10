@@ -22,6 +22,23 @@ jobs:
             CODE_SIGNING_ALLOWED=NO build
           test -d "$RUNNER_TEMP/derived/Build/Products/Release/FunCity.app"
 
+      - name: Package an unsigned developer-preview DMG
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        run: |
+          mkdir -p "$RUNNER_TEMP/preview" dist
+          ditto "$RUNNER_TEMP/derived/Build/Products/Release/FunCity.app" "$RUNNER_TEMP/preview/FunCity.app"
+          ln -s /Applications "$RUNNER_TEMP/preview/Applications"
+          hdiutil create -volname "Fun City Preview" -srcfolder "$RUNNER_TEMP/preview" \
+            -format UDZO -ov "dist/FunCity-preview-UNSIGNED.dmg"
+
+      - name: Upload unsigned developer preview
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: FunCity-preview-UNSIGNED
+          path: dist/FunCity-preview-UNSIGNED.dmg
+          retention-days: 7
+
       - name: Import Developer ID certificate
         if: startsWith(github.ref, 'refs/tags/v')
         env:
