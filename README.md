@@ -2,7 +2,7 @@
 
 **Fun City** is the home for our growing collection of native Mac arcade games, named after the arcade that started it all.
 
-The first two cabinets are [Vector Drift](https://github.com/peter-dietrich/vector-drift) and [Vector Siege](https://github.com/peter-dietrich/vector-siege). Each game remains in its own repository and runs as a separate macOS application. Fun City is a launcher and doesn't copy or embed the games.
+The first cabinets include [Vector Drift](https://github.com/peter-dietrich/vector-drift) and [Vector Siege](https://github.com/peter-dietrich/vector-siege), plus [Prism Hopper](https://github.com/peter-dietrich/prism-hopper). Each game remains in its own repository and runs as a separate macOS application. Fun City is a launcher and doesn't copy or embed the games.
 
 ## Start in Xcode
 
@@ -36,6 +36,7 @@ Fun City is an independent launcher. It looks for:
 |---|---|---|
 | Vector Drift | [peter-dietrich/vector-drift](https://github.com/peter-dietrich/vector-drift) | `io.vectordrift.prototype` |
 | Vector Siege | [peter-dietrich/vector-siege](https://github.com/peter-dietrich/vector-siege) | `io.vectorsiege.game` |
+| Prism Hopper | [peter-dietrich/prism-hopper](https://github.com/peter-dietrich/prism-hopper) | `io.prismhopper.game` |
 
 Future games can be added using **ADD GAME**, or included as built-in cabinets by extending `ArcadeGame.featured`.
 
