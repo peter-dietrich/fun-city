@@ -47,3 +47,46 @@ The repository's main Xcode project is `FunCity.xcodeproj`; source code is in `S
 ## Requirements
 
 macOS 13+, Xcode 16+; SwiftUI and AppKit. This is intended for personal, local use. Signing is disabled for command-line and CI debug builds.
+
+## Downloadable distribution (release pipeline)
+
+**Fun City installs from one downloadable macOS DMG**, while each game publishes its own signed, notarized `.app` inside a versioned ZIP file on its separate GitHub Releases page.
+
+The `feature/github-release-distribution` development branch introduces:
+- A `DOWNLOAD GAME` / `INSTALL / UPDATE` action for all five preconfigured cabinets.
+- Automatic lookup of the latest published release from each official game repository.
+- SHA-256 integrity verification using GitHub's release asset digest, or the accompanying `.sha256` file.
+- Expected filename and bundle-identifier checks, and a user-writable `~/Applications/Fun City Games` installation destination (no administrator privilege needed).
+- Launching installed games directly, while keeping the existing **LOCATE GAME** workflow for local Xcode builds.
+- A GitHub Actions release workflow to build, Developer-ID-sign, notarize, staple and publish `FunCity-macOS.dmg`.
+
+**No downloadable GitHub Releases exist for the launcher or games yet.** A successful signed public release requires appropriate Apple Developer ID credentials. These are deliberately not included in the repository, and the workflows refuse to publish release builds without them.
+
+### GitHub Actions secrets (set separately on all six repositories)
+
+| Secret | Value |
+| --- | --- |
+| `APPLE_DEVELOPER_ID_CERT_BASE64` | Base64-encoded Developer ID Application `.p12` export |
+| `APPLE_DEVELOPER_ID_CERT_PASSWORD` | Password of that `.p12` export |
+| `APPLE_SIGNING_IDENTITY` | Exact Developer ID Application signing identity (name or SHA-1) |
+| `APPLE_ID` | Apple Developer account email for notarization |
+| `APPLE_TEAM_ID` | Apple Developer Team ID |
+| `APPLE_APP_SPECIFIC_PASSWORD` | Apple app-specific password authorized for notarization |
+
+Never commit private signing certificates, account passwords or personal access tokens. If using App Store Connect API-key notarization instead of Apple ID, the workflows will need to be adapted.
+
+### Release convention
+
+After merging and validating a project's release workflow, create a version tag such as `v0.2.0` on that project's `main` branch and push it. The release workflow creates exactly one stable download name:
+
+- **Fun City:** `FunCity-macOS.dmg` with `FunCity-macOS.dmg.sha256`
+- **Vector Drift:** `VectorDrift-macOS.zip` and sibling `.sha256`
+- **Vector Siege:** `VectorSiege-macOS.zip` and sibling `.sha256`
+- **Vector Swarm:** `VectorSwarm-macOS.zip` and sibling `.sha256`
+- **Vector Vortex:** `VectorVortex-macOS.zip` and sibling `.sha256`
+- **Prism Hopper:** `PrismHopper-macOS.zip` and sibling `.sha256`
+
+Every new release is separate and must be tested first. Release tags must point to reviewed commits on `main`; never tag unreviewed feature-branch code. Fun City expects each official download asset to follow this exact naming convention.
+
+**Important:** SHA-256 verifies download integrity, not publisher identity by itself. Developer ID signing, notarization, and an unmodified release publishing pipeline provide additional provenance checks. A final security review should include validating the expected signing team and robust archive safety before public rollout.
+
