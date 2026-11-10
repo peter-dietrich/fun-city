@@ -37,6 +37,10 @@ xcodebuild -project FunCity.xcodeproj -scheme FunCity -destination 'platform=mac
 - Remove imported cabinets without deleting the games themselves.
 - Original graphics; no third-party game artwork, external libraries, account, or telemetry uploads.
 
+## Arcade repository audit
+
+See the [repository, release and licensing matrix](docs/REPOSITORY_MATRIX.md) for all six audited arcade repositories, license status, asset provenance review and release-readiness gates.
+
 ## Architecture
 
 Fun City is an independent launcher. It looks for:
