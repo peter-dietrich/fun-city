@@ -1,0 +1,87 @@
+name: Release Fun City installer
+
+on:
+  pull_request:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Fun City
+        run: |
+          xcodebuild -project FunCity.xcodeproj -scheme FunCity -configuration Release \
+            -derivedDataPath "$RUNNER_TEMP/derived" -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO build
+          test -d "$RUNNER_TEMP/derived/Build/Products/Release/FunCity.app"
+
+      - name: Import Developer ID certificate
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          APPLE_DEVELOPER_ID_CERT_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERT_BASE64 }}
+          APPLE_DEVELOPER_ID_CERT_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$APPLE_DEVELOPER_ID_CERT_BASE64"
+          test -n "$APPLE_DEVELOPER_ID_CERT_PASSWORD"
+          KEYCHAIN="$RUNNER_TEMP/release.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          printf '%s' "$APPLE_DEVELOPER_ID_CERT_BASE64" | base64 -D > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$KEYCHAIN" \
+            -P "$APPLE_DEVELOPER_ID_CERT_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -d user -s "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+
+      - name: Sign and notarize the app, then make a DMG
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$APPLE_SIGNING_IDENTITY"
+          test -n "$APPLE_ID"
+          test -n "$APPLE_TEAM_ID"
+          test -n "$APPLE_APP_SPECIFIC_PASSWORD"
+          APP="$RUNNER_TEMP/derived/Build/Products/Release/FunCity.app"
+          codesign --force --deep --options runtime --timestamp \
+            --sign "$APPLE_SIGNING_IDENTITY" "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarization.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarization.zip" \
+            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" --wait
+          xcrun stapler staple "$APP"
+          xcrun stapler validate "$APP"
+          mkdir -p "$RUNNER_TEMP/dmgroot" dist
+          ditto "$APP" "$RUNNER_TEMP/dmgroot/FunCity.app"
+          ln -s /Applications "$RUNNER_TEMP/dmgroot/Applications"
+          hdiutil create -volname "Fun City Arcade" -srcfolder "$RUNNER_TEMP/dmgroot" \
+            -format UDZO -ov "dist/FunCity-macOS.dmg"
+          xcrun notarytool submit "dist/FunCity-macOS.dmg" \
+            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" --wait
+          xcrun stapler staple "dist/FunCity-macOS.dmg"
+          (cd dist && shasum -a 256 FunCity-macOS.dmg > FunCity-macOS.dmg.sha256)
+
+      - name: Publish Fun City installer
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "dist/FunCity-macOS.dmg" "dist/FunCity-macOS.dmg.sha256" \
+            --title "Fun City $GITHUB_REF_NAME" --generate-notes
