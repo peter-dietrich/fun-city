@@ -1,5 +1,14 @@
 # Fun City — a personal arcade for macOS
 
+## Maintainer documentation (2026 audit)
+
+- [Architecture and development](docs/DEVELOPMENT.md) — code structure, local workflow, data and gameplay scope.
+- [Build, tests and quality checks](docs/QA_CHECKLIST.md) — repeatable Mac checks and what CI does **not** prove.
+- [Release and signing](docs/RELEASE.md) — release tags, notarization, archive output and Fun City integration.
+- [Licensing and provenance](docs/LICENSING.md) — MIT terms, inspiration/trademarks, asset-origin review and redistribution boundaries.
+- [Third-party notices](THIRD_PARTY_NOTICES.md) — observed libraries/resources and verification status.
+
+
 **Fun City** is the home for our growing collection of native Mac arcade games, named after the arcade that started it all.
 
 The arcade includes [Vector Drift](https://github.com/peter-dietrich/vector-drift), [Vector Siege](https://github.com/peter-dietrich/vector-siege), [Vector Vortex](https://github.com/peter-dietrich/vector-vortex), [Vector Swarm](https://github.com/peter-dietrich/vector-swarm), and [Prism Hopper](https://github.com/peter-dietrich/prism-hopper). Each game remains in its own repository and runs as a separate macOS application. Fun City is a launcher and doesn't copy or embed the games.
