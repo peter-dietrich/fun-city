@@ -29,7 +29,10 @@ private struct ArcadeGame: Codable, Identifiable {
                    bundleID: "io.vectordrift.prototype", appPath: nil, artwork: "space", builtIn: true),
         ArcadeGame(id: "siege", title: "VECTOR SIEGE", tagline: "TANK COMBAT / 1 PLAYER",
                    description: "Defend the horizon from a wireframe tank cockpit.",
-                   bundleID: "io.vectorsiege.game", appPath: nil, artwork: "tank", builtIn: true)
+                   bundleID: "io.vectorsiege.game", appPath: nil, artwork: "tank", builtIn: true),
+        ArcadeGame(id: "prism", title: "PRISM HOPPER", tagline: "ISOMETRIC / 1 PLAYER",
+                   description: "Hop through a glowing pyramid, charge prisms, and dodge relentless pursuers.",
+                   bundleID: "io.prismhopper.game", appPath: nil, artwork: "prism", builtIn: true)
     ]
 
     var accent: Color {
@@ -340,7 +343,27 @@ private struct CabinetArt: View {
                 Gradient(colors: [accent.opacity(0.19), Color(red: 0.02, green: 0.03, blue: 0.08), .black]),
                 startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)))
             let cx = size.width / 2, cy = size.height / 2
-            if kind == "space" {
+            if kind == "prism" {
+                let w = min(size.width / 5.6, size.height / 4.2)
+                let top = size.height * 0.2
+                for row in 0..<5 {
+                    for column in 0...row {
+                        let x = cx + (CGFloat(column) - CGFloat(row) / 2) * w
+                        let y = top + CGFloat(row) * w * 0.42
+                        let tint = (row + column).isMultiple(of: 3) ? accent : Color(red: 0.25, green: 0.76, blue: 1)
+                        var diamond = Path()
+                        diamond.move(to: CGPoint(x: x, y: y-w*0.25))
+                        diamond.addLine(to: CGPoint(x: x+w*0.5, y: y))
+                        diamond.addLine(to: CGPoint(x: x, y: y+w*0.25))
+                        diamond.addLine(to: CGPoint(x: x-w*0.5, y: y))
+                        diamond.closeSubpath()
+                        context.fill(diamond, with: .color(tint.opacity(0.84)))
+                        context.stroke(diamond, with: .color(.white.opacity(0.75)), lineWidth: 1.2)
+                    }
+                }
+                context.fill(Path(ellipseIn: CGRect(x: cx-12, y: top-23, width: 24, height: 24)),
+                             with: .color(accent))
+            } else if kind == "space" {
                 for i in 0..<50 {
                     let x = CGFloat((i * 137 + 31) % 983) / 983 * size.width
                     let y = CGFloat((i * 181 + 43) % 997) / 997 * size.height
