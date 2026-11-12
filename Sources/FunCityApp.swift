@@ -152,8 +152,6 @@ private final class ArcadeLibrary: ObservableObject {
     }
 }
 
-/// Bundled neon cabinet art. If a resource is missing, the original
-/// wireframe cabinet illustration remains available as a fallback.
 /// Short original two-tone cabinet-selection chime. Audio is synthesized in
 /// memory; no sound file downloads and no copyrighted game audio.
 private final class ArcadeChime {
@@ -188,46 +186,6 @@ private final class ArcadeChime {
         }
         player.scheduleBuffer(buffer, completionHandler: nil)
         if !player.isPlaying { player.play() }
-    }
-}
-
-private struct ArcadeLogo: View {
-    let name: String
-    @State private var illuminated = false
-
-    private var logo: NSImage? {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "jpg") else {
-            return nil
-        }
-        return NSImage(contentsOf: url)
-    }
-
-    var body: some View {
-        Group {
-            if let logo {
-                Image(nsImage: logo)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
-                    .shadow(color: .cyan.opacity(illuminated ? 0.30 : 0.08),
-                            radius: illuminated ? 18 : 5)
-                    .shadow(color: .pink.opacity(illuminated ? 0.20 : 0.04),
-                            radius: illuminated ? 24 : 6)
-            } else {
-                Text(name == "FunCityLogo" ? "FUN CITY" : name)
-                    .font(.system(size: 24, weight: .black, design: .rounded))
-                    .foregroundStyle(.cyan)
-                    .shadow(color: .pink, radius: illuminated ? 12 : 4)
-            }
-        }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
-                illuminated = true
-            }
-        }
-        .accessibilityLabel(name
-            .replacingOccurrences(of: "Logo", with: "")
-            .replacingOccurrences(of: "Vector", with: "Vector "))
     }
 }
 
@@ -326,8 +284,10 @@ private struct ArcadeLobby: View {
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 5) {
-                ArcadeLogo(name: "FunCityLogo")
-                    .frame(width: 186, height: 154)
+                Text("FUN CITY")
+                    .font(.system(size: 36, weight: .black, design: .rounded))
+                    .tracking(5)
+                    .shadow(color: .pink.opacity(0.9), radius: 16)
                     .accessibilityHint("Welcome to Fun City Arcade")
                 Text("YOUR PERSONAL ARCADE")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
@@ -342,24 +302,9 @@ private struct ArcadeLobby: View {
         }
     }
 
-    @ViewBuilder
-    private func cabinetPreview(for game: ArcadeGame) -> some View {
-        let resource = game.id == "drift" ? "VectorDriftLogo"
-            : game.id == "siege" ? "VectorSiegeLogo" : ""
-        ZStack {
-            Color(red: 0.012, green: 0.018, blue: 0.05)
-            if !resource.isEmpty {
-                ArcadeLogo(name: resource)
-                    .padding(.horizontal, 26)
-            } else {
-                CabinetArt(kind: game.artwork, accent: game.accent)
-            }
-        }
-    }
-
     private func featured(_ game: ArcadeGame) -> some View {
         HStack(spacing: 22) {
-            cabinetPreview(for: game)
+            CabinetArt(kind: game.artwork, accent: game.accent)
                 .frame(width: 300, height: 210)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             VStack(alignment: .leading, spacing: 10) {
@@ -432,17 +377,9 @@ private struct CabinetCard: View {
     let available: Bool
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            ZStack {
-                Color(red: 0.012, green: 0.018, blue: 0.05)
-                if game.id == "drift" {
-                    ArcadeLogo(name: "VectorDriftLogo")
-                } else if game.id == "siege" {
-                    ArcadeLogo(name: "VectorSiegeLogo")
-                } else {
-                    CabinetArt(kind: game.artwork, accent: game.accent)
-                }
-            }
-                .frame(height: 125).clipShape(RoundedRectangle(cornerRadius: 10))
+            CabinetArt(kind: game.artwork, accent: game.accent)
+                .frame(height: 125)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(game.title)

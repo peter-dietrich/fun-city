@@ -10,7 +10,7 @@
 
 - `FunCity.xcodeproj` — native macOS application target and build settings.
 - `Sources/` — platform UI, gameplay, rendering, sound and persistence implementation. Browse source filenames in this directory for subsystem boundaries.
-- `Resources/` — tracked artwork/audio where present. Validate origin and packaging before any public release.
+- Cabinet artwork is generated directly in SwiftUI; no bundled logo JPEGs are needed. Validate any future assets before public release.
 - `.github/workflows/` — macOS build checks and release automation.
 - `README.md` — player-facing setup, controls and change log.
 

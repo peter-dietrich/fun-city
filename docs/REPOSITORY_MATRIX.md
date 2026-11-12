@@ -25,7 +25,7 @@ The five active repositories each contain `LICENSE`, `README.md`, `THIRD_PARTY_N
 
 - **Repository license text:** MIT is present in the active repositories, including newly added Vector Swarm. The text alone does not certify that every resource or line of code is owned by the licensor.
 - **Dependencies:** no third-party Swift package manifests or vendored third-party libraries were found in the inspected source trees. Apple frameworks and system resources are subject to Apple terms.
-- **Resources requiring provenance records:** the Fun City and game-logo JPEGs; Vector Siege's six WAV sound effects; any outside or AI-generated artwork subsequently used in marketing or release bundles. For each, retain the creator, source, license/permission evidence and redistribution scope.
+- **Resources requiring provenance records:** Vector Siege's six WAV sound effects; any outside or AI-generated artwork subsequently used in marketing or release bundles. For each, retain the creator, source, license/permission evidence and redistribution scope.
 - **Historical arcade inspiration:** these are original genre-inspired games; inspect game marks, art style, audio, recognizable likenesses and packaging for potential trademark and copyrighted-expression conflicts before commercial distribution. Use no unlicensed third-party original game art, logos or recorded music.
 - **Legal outcome:** **technical license-file consistency verified**, but creator ownership, media provenance, trademark non-infringement and commercial release clearance **not legally certified**.
 
