@@ -30,7 +30,7 @@ Check the **Actions** page for current build runs. Where the repository provides
 
 ## Game-specific smoke tests
 
-Launch the lobby, inspect all five built-in cabinets, locate local .app bundles, verify external launch; check download refusal for no release/checksum mismatch/unexpected bundle and rerun on fresh accounts.
+Launch the lobby, inspect all four built-in cabinets, locate local .app bundles, verify external launch; check download refusal for no release/checksum mismatch/unexpected bundle and rerun on fresh accounts. Verify the retired Prism Hopper entry disappears from a persisted legacy library and cannot be re-imported.
 
 ## Evidence
 

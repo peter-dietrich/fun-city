@@ -11,14 +11,14 @@
 
 **Fun City** is the home for our growing collection of native Mac arcade games, named after the arcade that started it all.
 
-The arcade includes [Vector Drift](https://github.com/peter-dietrich/vector-drift), [Vector Siege](https://github.com/peter-dietrich/vector-siege), [Vector Vortex](https://github.com/peter-dietrich/vector-vortex), [Vector Swarm](https://github.com/peter-dietrich/vector-swarm), and [Prism Hopper](https://github.com/peter-dietrich/prism-hopper). Each game remains in its own repository and runs as a separate macOS application. Fun City is a launcher and doesn't copy or embed the games.
+The arcade includes [Vector Drift](https://github.com/peter-dietrich/vector-drift), [Vector Siege](https://github.com/peter-dietrich/vector-siege), [Vector Vortex](https://github.com/peter-dietrich/vector-vortex), [Vector Swarm](https://github.com/peter-dietrich/vector-swarm). Each game remains in its own repository and runs as a separate macOS application. Fun City is a launcher and doesn't copy or embed the games.
 
 ## Start in Xcode
 
 1. Clone this repository to `~/Documents/GitHub/fun-city`.
 2. Open `FunCity.xcodeproj` in Xcode (16 or newer).
 3. Select scheme **FunCity**, destination **My Mac**, and press **Command-R**.
-4. Select **Vector Drift**, **Vector Siege**, **Vector Vortex**, **Vector Swarm**, or **Prism Hopper**. If the cabinet reads "LINK GAME TO PLAY", click **LOCATE GAME** and select the game's built `.app` in its Xcode build products directory (normally `~/Library/Developer/Xcode/DerivedData/<game>-.../Build/Products/Debug`).
+4. Select **Vector Drift**, **Vector Siege**, **Vector Vortex**, **Vector Swarm**. If the cabinet reads "LINK GAME TO PLAY", click **LOCATE GAME** and select the game's built `.app` in its Xcode build products directory (normally `~/Library/Developer/Xcode/DerivedData/<game>-.../Build/Products/Debug`).
 
 Command-line build (on macOS):
 
@@ -29,7 +29,7 @@ xcodebuild -project FunCity.xcodeproj -scheme FunCity -destination 'platform=mac
 ## v0.1
 
 - Native SwiftUI arcade lobby, neon marquee, free-play sign, vector cabinet illustrations.
-- Built-in cabinets include **Vector Drift**, **Vector Siege**, **Vector Vortex**, **Vector Swarm**, and **Prism Hopper**.
+- Built-in cabinets include **Vector Drift**, **Vector Siege**, **Vector Vortex**, **Vector Swarm**.
 - Automatic app lookup via each game's bundle identifier when macOS knows where it is installed.
 - **LOCATE GAME** for Xcode-built apps not yet registered with macOS.
 - **PLAY NOW** opens the selected game in its own window while Fun City stays open.
@@ -39,7 +39,7 @@ xcodebuild -project FunCity.xcodeproj -scheme FunCity -destination 'platform=mac
 
 ## Arcade repository audit
 
-See the [repository, release and licensing matrix](docs/REPOSITORY_MATRIX.md) for all six audited arcade repositories, license status, asset provenance review and release-readiness gates.
+See the [repository, release and licensing matrix](docs/REPOSITORY_MATRIX.md) for the five active arcade repositories, license status, asset provenance review and release-readiness gates.
 
 ## Architecture
 
@@ -51,7 +51,6 @@ Fun City is an independent launcher. It looks for:
 | Vector Siege | [peter-dietrich/vector-siege](https://github.com/peter-dietrich/vector-siege) | `io.vectorsiege.game` |
 | Vector Vortex | [peter-dietrich/vector-vortex](https://github.com/peter-dietrich/vector-vortex) | `io.vectorvortex.game` |
 | Vector Swarm | [peter-dietrich/vector-swarm](https://github.com/peter-dietrich/vector-swarm) | `io.vectorswarm.game` |
-| Prism Hopper | [peter-dietrich/prism-hopper](https://github.com/peter-dietrich/prism-hopper) | `io.prismhopper.game` |
 
 Future games can be added using **ADD GAME**, or included as built-in cabinets by extending `ArcadeGame.featured`.
 
@@ -69,17 +68,17 @@ The launcher now displays the Fun City marquee logo and game-specific artwork fo
 
 **Fun City installs from one downloadable macOS DMG**, while each game publishes its own signed, notarized `.app` inside a versioned ZIP file on its separate GitHub Releases page.
 
-The `feature/github-release-distribution` development branch introduces:
-- A `DOWNLOAD GAME` / `INSTALL / UPDATE` action for all five preconfigured cabinets.
+The distribution implementation provides:
+- A `DOWNLOAD GAME` / `INSTALL / UPDATE` action for all four preconfigured cabinets.
 - Automatic lookup of the latest published release from each official game repository.
 - SHA-256 integrity verification using GitHub's release asset digest, or the accompanying `.sha256` file.
 - Expected filename and bundle-identifier checks, and a user-writable `~/Applications/Fun City Games` installation destination (no administrator privilege needed).
 - Launching installed games directly, while keeping the existing **LOCATE GAME** workflow for local Xcode builds.
 - A GitHub Actions release workflow to build, Developer-ID-sign, notarize, staple and publish `FunCity-macOS.dmg`.
 
-**No downloadable GitHub Releases exist for the launcher or games yet.** A successful signed public release requires appropriate Apple Developer ID credentials. These are deliberately not included in the repository, and the workflows refuse to publish release builds without them.
+Publishing a successful signed public release requires appropriate Apple Developer ID credentials. These are deliberately not included in the repository, and the workflows refuse to publish release builds without them.
 
-### GitHub Actions secrets (set separately on all six repositories)
+### GitHub Actions secrets (set separately on all five active repositories)
 
 | Secret | Value |
 | --- | --- |
@@ -101,9 +100,12 @@ After merging and validating a project's release workflow, create a version tag 
 - **Vector Siege:** `VectorSiege-macOS.zip` and sibling `.sha256`
 - **Vector Swarm:** `VectorSwarm-macOS.zip` and sibling `.sha256`
 - **Vector Vortex:** `VectorVortex-macOS.zip` and sibling `.sha256`
-- **Prism Hopper:** `PrismHopper-macOS.zip` and sibling `.sha256`
 
 Every new release is separate and must be tested first. Release tags must point to reviewed commits on `main`; never tag unreviewed feature-branch code. Fun City expects each official download asset to follow this exact naming convention.
 
 **Important:** SHA-256 verifies download integrity, not publisher identity by itself. Developer ID signing, notarization, and an unmodified release publishing pipeline provide additional provenance checks. A final security review should include validating the expected signing team and robust archive safety before public rollout.
 
+
+## Retired arcade title
+
+Prism Hopper was removed from the Fun City catalog and release/download integration on November 12, 2026, at the project owner's request due to intellectual-property concerns. Older local Fun City libraries are migrated to remove its entry. Fun City does not delete any previously installed app or its saved data. The separate source repository remains outside the active Fun City release program.
