@@ -60,9 +60,9 @@ The repository's main Xcode project is `FunCity.xcodeproj`; source code is in `S
 
 macOS 13+, Xcode 16+; SwiftUI and AppKit. This is intended for personal, local use. Signing is disabled for command-line and CI debug builds.
 
-## Animated neon identity
+## Original arcade visuals
 
-The launcher now displays the Fun City marquee logo and game-specific artwork for Vector Drift and Vector Siege in the featured cabinet and selection grid. All three reduced-size prototype JPEGs are bundled as offline app resources. Glow gently pulses, and selecting or launching a cabinet triggers a short original synthesized two-note arcade chime. Original full-resolution artwork can replace the bundled previews later. The individual games still launch independently via their existing app lookups.
+The launcher uses its original typographic FUN CITY marquee and original procedural vector-style cabinet illustrations for all four built-in games. Both the featured-game preview and the arcade floor use these generated-in-code drawings, without bundled JPEG logos. Selecting or launching a cabinet plays a short original synthesized two-note arcade chime. The individual games still launch independently via their existing app lookups.
 
 ## Downloadable distribution (release pipeline)
 
