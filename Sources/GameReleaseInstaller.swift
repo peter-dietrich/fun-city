@@ -19,15 +19,13 @@ struct GameDistribution: Sendable {
             return .init(repo: "vector-swarm", appName: "VectorSwarm", bundleID: "io.vectorswarm.game")
         case "vortex":
             return .init(repo: "vector-vortex", appName: "VectorVortex", bundleID: "io.vectorvortex.game")
-        case "prism":
-            return .init(repo: "prism-hopper", appName: "PrismHopper", bundleID: "io.prismhopper.game")
         default:
             return nil
         }
     }
 
     static func installedURL(forBundleID id: String) -> URL? {
-        guard let spec = ["drift", "siege", "swarm", "vortex", "prism"]
+        guard let spec = ["drift", "siege", "swarm", "vortex"]
             .compactMap({ forGame($0) }).first(where: { $0.bundleID == id }) else { return nil }
         let location = gamesDirectory.appendingPathComponent(spec.appName + ".app", isDirectory: true)
         guard FileManager.default.fileExists(atPath: location.path),
