@@ -37,13 +37,17 @@ private struct ArcadeGame: Codable, Identifiable {
         ArcadeGame(id: "swarm", title: "VECTOR SWARM", tagline: "SPACE INVASION / 1 PLAYER",
                    description: "Blast enemy formations, survive diving attacks, rescue wingmen.",
                    bundleID: "io.vectorswarm.game", appPath: nil, artwork: "swarm", builtIn: true),
+        ArcadeGame(id: "soar", title: "VECTOR SOAR", tagline: "AERIAL COMBAT / 1 PLAYER",
+                   description: "Flap, climb, dive and dominate neon airspace.",
+                   bundleID: "io.vectorsoar.game", appPath: nil, artwork: "soar", builtIn: true),
         ArcadeGame(id: "barrage", title: "VECTOR BARRAGE", tagline: "MISSILE DEFENSE / 1 PLAYER",
                    description: "Protect six cities with timed interceptor explosions.",
                    bundleID: "io.vectorbarrage.game", appPath: nil, artwork: "barrage", builtIn: true)
     ]
 
     var accent: Color {
-        artwork == "barrage" ? Color(red: 1, green: 0.62, blue: 0.28)
+        artwork == "soar" ? Color(red: 0.27, green: 0.91, blue: 0.96)
+        : artwork == "barrage" ? Color(red: 1, green: 0.62, blue: 0.28)
         : artwork == "swarm" ? Color(red: 0.9, green: 0.44, blue: 0.9)
         : artwork == "tank" ? Color(red: 0.51, green: 1, blue: 0.59)
         : artwork == "space" ? Color(red: 0.45, green: 0.82, blue: 1)
@@ -419,7 +423,33 @@ private struct CabinetArt: View {
                 Gradient(colors: [accent.opacity(0.19), Color(red: 0.02, green: 0.03, blue: 0.08), .black]),
                 startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)))
             let cx = size.width / 2, cy = size.height / 2
-            if kind == "barrage" {
+            if kind == "soar" {
+                for i in 0..<3 {
+                    let px = size.width * CGFloat(0.15 + Double(i) * 0.27)
+                    let py = size.height * CGFloat(0.24 + Double(i % 2) * 0.39)
+                    var platform = Path()
+                    platform.move(to: CGPoint(x: px, y: py))
+                    platform.addLine(to: CGPoint(x: px + size.width * 0.21, y: py))
+                    context.stroke(platform, with: .color(accent.opacity(0.5)), lineWidth: 2)
+                }
+                for i in 0..<3 {
+                    let x = size.width * CGFloat(0.24 + Double(i) * 0.26)
+                    let y = size.height * CGFloat(i == 1 ? 0.60 : 0.34)
+                    let dir: CGFloat = i == 1 ? -1 : 1
+                    var wing = Path()
+                    wing.move(to: CGPoint(x: x - 27, y: y + 15))
+                    wing.addLine(to: CGPoint(x: x - 9, y: y))
+                    wing.addLine(to: CGPoint(x: x + 8, y: y))
+                    wing.addLine(to: CGPoint(x: x + 27, y: y + 15))
+                    context.stroke(wing, with: .color(i == 1 ? .orange : accent), lineWidth: 2.6)
+                    var hull = Path()
+                    hull.move(to: CGPoint(x: x - 9, y: y))
+                    hull.addLine(to: CGPoint(x: x + 13 * dir, y: y - 6))
+                    hull.addLine(to: CGPoint(x: x, y: y - 18))
+                    hull.closeSubpath()
+                    context.stroke(hull, with: .color(i == 1 ? .orange : .white), lineWidth: 2.2)
+                }
+            } else if kind == "barrage" {
                 let ground = size.height * 0.81
                 var line = Path()
                 line.move(to: CGPoint(x: 0, y: ground))
