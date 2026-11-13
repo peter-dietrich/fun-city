@@ -19,6 +19,8 @@ struct GameDistribution: Sendable {
             return .init(repo: "vector-soar", appName: "VectorSoar", bundleID: "io.vectorsoar.game")
         case "barrage":
             return .init(repo: "vector-barrage", appName: "VectorBarrage", bundleID: "io.vectorbarrage.game")
+        case "aces":
+            return .init(repo: "vector-aces", appName: "VectorAces", bundleID: "io.vectoraces.game")
         case "swarm":
             return .init(repo: "vector-swarm", appName: "VectorSwarm", bundleID: "io.vectorswarm.game")
         case "vortex":
