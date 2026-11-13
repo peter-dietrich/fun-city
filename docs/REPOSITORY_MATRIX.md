@@ -9,10 +9,13 @@ _Audit date: November 9, 2026 (America/Denver). Covers **the Fun City arcade fam
 | Vector Siege | [vector-siege](https://github.com/peter-dietrich/vector-siege) | macOS 13+ | `io.vectorsiege.game` | First-person tank shooter | MIT |
 | Vector Swarm | [vector-swarm](https://github.com/peter-dietrich/vector-swarm) | macOS 13+ | `io.vectorswarm.game` | Formation shooter | MIT (added in this audit) |
 | Vector Vortex | [vector-vortex](https://github.com/peter-dietrich/vector-vortex) | macOS 14+ | `io.vectorvortex.game` | Tube shooter | MIT |
+| Vector Barrage | [vector-barrage](https://github.com/peter-dietrich/vector-barrage) | macOS 13+ | `io.vectorbarrage.game` | Missile defense | MIT |
+| Vector Soar | [vector-soar](https://github.com/peter-dietrich/vector-soar) | macOS 14+ | `io.vectorsoar.game` | Aerial arcade combat | MIT |
+| Vector Aces | [vector-aces](https://github.com/peter-dietrich/vector-aces) | macOS 13+ | `io.vectoraces.game` | WWII air combat | MIT |
 
 ## Confirmed source-tree documentation
 
-The five active repositories each contain `LICENSE`, `README.md`, `THIRD_PARTY_NOTICES.md`, and four maintainer documents: `docs/DEVELOPMENT.md`, `docs/QA_CHECKLIST.md`, `docs/RELEASE.md`, and `docs/LICENSING.md`. The CI build status of a commit needs to be checked separately from documentation completeness.
+The original five repositories have the full maintainer document set. Newer games (Vector Barrage, Vector Soar, Vector Aces) currently have smaller development layouts; release documentation and automation must be completed before public distribution. The CI build status of a commit needs to be checked separately from documentation completeness.
 
 ## Distribution contracts
 
@@ -31,7 +34,7 @@ The five active repositories each contain `LICENSE`, `README.md`, `THIRD_PARTY_N
 
 ## Release gates
 
-- [ ] All five active repository commits pass their macOS build checks.
+- [ ] All eight active repository commits pass their macOS build checks.
 - [ ] Each game is interactively tested on a supported Mac; save/resume, controls, audio and game-specific mechanics checked.
 - [ ] Fun City's downloader is exercised against official releases, invalid packages, mismatched checksums and missing releases.
 - [ ] Asset provenance and software copyright ownership are confirmed and recorded.
@@ -44,3 +47,7 @@ This matrix is an audit record, not a substitute for legal review or completed e
 ## Removed from active distribution (November 12, 2026)
 
 Prism Hopper (formerly `peter-dietrich/prism-hopper`, bundle ID `io.prismhopper.game`) is **retired** and excluded from Fun City's application catalog, update/download registry, release plan and built-in artwork because of intellectual-property concerns. Its separate public source repository has not been deleted, but it is not part of the active arcade lineup; no GitHub Releases were found in that repository at the time of removal.
+
+## Newly discovered active games (November 13, 2026)
+
+Fun City now lists seven games. Vector Aces currently has game source only on `feature/vector-aces-initial`, and its dedicated macOS CI is being added there. Barrage, Soar and Aces do not yet have the signed release workflow used by the four older games. The launcher supports locating their locally built `.app` bundles; its Download Game action requires a separately published, verified release. Prism Hopper stays retired.
