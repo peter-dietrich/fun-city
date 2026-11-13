@@ -31,7 +31,7 @@ struct GameDistribution: Sendable {
     }
 
     static func installedURL(forBundleID id: String) -> URL? {
-        guard let spec = ["drift", "siege", "swarm", "vortex", "barrage", "soar"]
+        guard let spec = ["drift", "siege", "swarm", "vortex", "barrage", "soar", "aces"]
             .compactMap({ forGame($0) }).first(where: { $0.bundleID == id }) else { return nil }
         let location = gamesDirectory.appendingPathComponent(spec.appName + ".app", isDirectory: true)
         guard FileManager.default.fileExists(atPath: location.path),
