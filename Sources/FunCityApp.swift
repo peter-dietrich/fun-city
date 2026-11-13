@@ -427,7 +427,7 @@ private struct CabinetArt: View {
                 context.stroke(line, with: .color(.cyan), lineWidth: 2)
                 for i in 0..<6 {
                     let x = size.width * (0.14 + CGFloat(i) * 0.145)
-                    context.stroke(Path(rect: CGRect(x: x-9, y: ground-23, width: 18, height: 23)), with: .color(.cyan), lineWidth: 1.5)
+                    context.stroke(Path(CGRect(x: x-9, y: ground-23, width: 18, height: 23)), with: .color(.cyan), lineWidth: 1.5)
                 }
                 for i in 0..<4 {
                     var trail = Path()
