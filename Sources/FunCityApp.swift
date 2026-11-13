@@ -42,11 +42,15 @@ private struct ArcadeGame: Codable, Identifiable {
                    bundleID: "io.vectorsoar.game", appPath: nil, artwork: "soar", builtIn: true),
         ArcadeGame(id: "barrage", title: "VECTOR BARRAGE", tagline: "MISSILE DEFENSE / 1 PLAYER",
                    description: "Protect six cities with timed interceptor explosions.",
-                   bundleID: "io.vectorbarrage.game", appPath: nil, artwork: "barrage", builtIn: true)
+                   bundleID: "io.vectorbarrage.game", appPath: nil, artwork: "barrage", builtIn: true),
+        ArcadeGame(id: "aces", title: "VECTOR ACES", tagline: "WWII AIR COMBAT / 1 PLAYER",
+                   description: "Choose an American fighter and survive cinematic dogfight waves.",
+                   bundleID: "io.vectoraces.game", appPath: nil, artwork: "aces", builtIn: true)
     ]
 
     var accent: Color {
-        artwork == "soar" ? Color(red: 0.27, green: 0.91, blue: 0.96)
+        artwork == "aces" ? Color(red: 1, green: 0.75, blue: 0.4)
+        : artwork == "soar" ? Color(red: 0.27, green: 0.91, blue: 0.96)
         : artwork == "barrage" ? Color(red: 1, green: 0.62, blue: 0.28)
         : artwork == "swarm" ? Color(red: 0.9, green: 0.44, blue: 0.9)
         : artwork == "tank" ? Color(red: 0.51, green: 1, blue: 0.59)
