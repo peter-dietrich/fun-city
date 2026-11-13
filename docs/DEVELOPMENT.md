@@ -16,7 +16,7 @@
 
 ## Supported functionality
 
-Four featured cabinets, app discovery, LOCATE GAME, custom cabinets, signed-game ZIP download and local install, artwork and original synthesized chime.
+Seven featured cabinets, app discovery, LOCATE GAME, custom cabinets, signed-game ZIP download and local install, artwork and original synthesized chime.
 
 ## Local development
 
