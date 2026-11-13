@@ -427,7 +427,55 @@ private struct CabinetArt: View {
                 Gradient(colors: [accent.opacity(0.19), Color(red: 0.02, green: 0.03, blue: 0.08), .black]),
                 startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)))
             let cx = size.width / 2, cy = size.height / 2
-            if kind == "soar" {
+            if kind == "aces" {
+                // Original top-down fighter silhouettes; no licensed aircraft art.
+                for i in 0..<5 {
+                    let x = size.width * CGFloat(0.12 + Double(i) * 0.18)
+                    var contour = Path()
+                    contour.move(to: CGPoint(x: x, y: 0))
+                    contour.addLine(to: CGPoint(x: x - 18, y: size.height))
+                    context.stroke(contour, with: .color(.white.opacity(0.07)), lineWidth: 1)
+                }
+                let formations: [(CGFloat, CGFloat, CGFloat, Double)] = [
+                    (0.50, 0.57, 1.0, 0),
+                    (0.20, 0.24, 0.48, -0.28),
+                    (0.78, 0.29, 0.43, 0.25)
+                ]
+                for (i, aircraft) in formations.enumerated() {
+                    let (px, py, scale, angle) = aircraft
+                    let x = size.width * px
+                    let y = size.height * py
+                    var outline = Path()
+                    let points: [(CGFloat, CGFloat)] = [
+                        (0, -37), (-6, -16), (-33, -7), (-33, 2),
+                        (-6, 4), (-6, 22), (-14, 29), (-14, 34),
+                        (0, 29), (14, 34), (14, 29), (6, 22),
+                        (6, 4), (33, 2), (33, -7), (6, -16)
+                    ]
+                    for (j, point) in points.enumerated() {
+                        let qx = point.0 * scale
+                        let qy = point.1 * scale
+                        let rotated = CGPoint(
+                            x: x + qx * CGFloat(cos(angle)) - qy * CGFloat(sin(angle)),
+                            y: y + qx * CGFloat(sin(angle)) + qy * CGFloat(cos(angle))
+                        )
+                        if j == 0 { outline.move(to: rotated) }
+                        else { outline.addLine(to: rotated) }
+                    }
+                    outline.closeSubpath()
+                    context.stroke(outline,
+                                   with: .color(i == 0 ? accent : .orange.opacity(0.82)),
+                                   lineWidth: i == 0 ? 2.4 : 1.6)
+                    if i == 0 {
+                        var guns = Path()
+                        guns.move(to: CGPoint(x: x - 25, y: y - 12))
+                        guns.addLine(to: CGPoint(x: x - 25, y: y - 42))
+                        guns.move(to: CGPoint(x: x + 25, y: y - 12))
+                        guns.addLine(to: CGPoint(x: x + 25, y: y - 42))
+                        context.stroke(guns, with: .color(.yellow.opacity(0.85)), lineWidth: 1.5)
+                    }
+                }
+            } else if kind == "soar" {
                 for i in 0..<3 {
                     let px = size.width * CGFloat(0.15 + Double(i) * 0.27)
                     let py = size.height * CGFloat(0.24 + Double(i % 2) * 0.39)
