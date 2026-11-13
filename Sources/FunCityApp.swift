@@ -36,11 +36,15 @@ private struct ArcadeGame: Codable, Identifiable {
                    bundleID: "io.vectorvortex.game", appPath: nil, artwork: "vortex", builtIn: true),
         ArcadeGame(id: "swarm", title: "VECTOR SWARM", tagline: "SPACE INVASION / 1 PLAYER",
                    description: "Blast enemy formations, survive diving attacks, rescue wingmen.",
-                   bundleID: "io.vectorswarm.game", appPath: nil, artwork: "swarm", builtIn: true)
+                   bundleID: "io.vectorswarm.game", appPath: nil, artwork: "swarm", builtIn: true),
+        ArcadeGame(id: "barrage", title: "VECTOR BARRAGE", tagline: "MISSILE DEFENSE / 1 PLAYER",
+                   description: "Protect six cities with timed interceptor explosions.",
+                   bundleID: "io.vectorbarrage.game", appPath: nil, artwork: "barrage", builtIn: true)
     ]
 
     var accent: Color {
-        artwork == "swarm" ? Color(red: 0.9, green: 0.44, blue: 0.9)
+        artwork == "barrage" ? Color(red: 1, green: 0.62, blue: 0.28)
+        : artwork == "swarm" ? Color(red: 0.9, green: 0.44, blue: 0.9)
         : artwork == "tank" ? Color(red: 0.51, green: 1, blue: 0.59)
         : artwork == "space" ? Color(red: 0.45, green: 0.82, blue: 1)
         : artwork == "vortex" ? Color(red: 1, green: 0.30, blue: 0.77)
@@ -415,7 +419,25 @@ private struct CabinetArt: View {
                 Gradient(colors: [accent.opacity(0.19), Color(red: 0.02, green: 0.03, blue: 0.08), .black]),
                 startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)))
             let cx = size.width / 2, cy = size.height / 2
-            if kind == "swarm" {
+            if kind == "barrage" {
+                let ground = size.height * 0.81
+                var line = Path()
+                line.move(to: CGPoint(x: 0, y: ground))
+                line.addLine(to: CGPoint(x: size.width, y: ground))
+                context.stroke(line, with: .color(.cyan), lineWidth: 2)
+                for i in 0..<6 {
+                    let x = size.width * (0.14 + CGFloat(i) * 0.145)
+                    context.stroke(Path(rect: CGRect(x: x-9, y: ground-23, width: 18, height: 23)), with: .color(.cyan), lineWidth: 1.5)
+                }
+                for i in 0..<4 {
+                    var trail = Path()
+                    trail.move(to: CGPoint(x: size.width * CGFloat(0.08 + Double(i) * 0.27), y: 0))
+                    trail.addLine(to: CGPoint(x: size.width * CGFloat(0.20 + Double(i) * 0.18), y: size.height * 0.46))
+                    context.stroke(trail, with: .color(i.isMultiple(of: 2) ? .orange : .red), lineWidth: 1.7)
+                }
+                let radius = min(size.width, size.height) * 0.14
+                context.stroke(Path(ellipseIn: CGRect(x: cx-radius, y: cy-radius, width: 2*radius, height: 2*radius)), with: .color(.white), lineWidth: 3)
+            } else if kind == "swarm" {
                 for row in 0..<3 {
                     for column in 0..<8 {
                         let x = size.width * (0.16 + CGFloat(column) * 0.095)
