@@ -84,6 +84,11 @@ private final class ArcadeLibrary: ObservableObject {
     }
 
     func location(for game: ArcadeGame) -> URL? {
+        // Prefer the managed app we just downloaded over an older Xcode build.
+        if let identifier = game.bundleID,
+           let managed = GameDistribution.installedURL(forBundleID: identifier) {
+            return managed
+        }
         if let path = game.appPath {
             let url = URL(fileURLWithPath: path)
             if url.pathExtension.lowercased() == "app",
@@ -204,6 +209,7 @@ private final class ArcadeChime {
 private struct ArcadeLobby: View {
     @StateObject private var library = ArcadeLibrary()
     @StateObject private var installer = GameReleaseInstaller()
+    @AppStorage("FunCity.VectorDriftBetaEnabled") private var driftBetaEnabled = false
     @State private var selection = "drift"
     private var current: ArcadeGame? {
         library.games.first(where: { $0.id == selection }) ?? library.games.first
@@ -329,6 +335,12 @@ private struct ArcadeLobby: View {
                 Text(game.description)
                     .font(.system(size: 13))
                     .foregroundStyle(.white.opacity(0.62))
+                if game.id == "drift" {
+                    Toggle("VECTOR DRIFT BETA TEST (PUBLIC PRERELEASE)", isOn: $driftBetaEnabled)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .tint(.orange)
+                        .help("Development only. Download the newest signed v0.14.2-beta prerelease from GitHub.")
+                }
                 Spacer(minLength: 0)
                 HStack(spacing: 10) {
                     Button {
@@ -345,9 +357,9 @@ private struct ArcadeLobby: View {
                     .keyboardShortcut(.return, modifiers: [])
                     if GameDistribution.forGame(game.id) != nil {
                         Button {
-                            installer.install(game.id)
+                            installer.install(game.id, beta: game.id == "drift" && driftBetaEnabled)
                         } label: {
-                            Label(installer.status[game.id] ?? (library.location(for: game) == nil ? "DOWNLOAD GAME" : "INSTALL / UPDATE"),
+                            Label(installer.status[game.id] ?? (game.id == "drift" && driftBetaEnabled ? "BETA: CHECK / INSTALL" : (library.location(for: game) == nil ? "DOWNLOAD GAME" : "CHECK / UPDATE")),
                                   systemImage: "arrow.down.circle")
                         }
                         .buttonStyle(.borderedProminent)
