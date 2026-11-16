@@ -91,10 +91,44 @@ enum GameDownloadError: LocalizedError {
     }
 }
 
+struct GameQuitPrompt {
+    let id: String
+    let appName: String
+    let beta: Bool
+}
+
 @MainActor
 final class GameReleaseInstaller: ObservableObject {
     @Published private(set) var status: [String: String] = [:]
     @Published var notice: String?
+    @Published var quitPrompt: GameQuitPrompt?
+
+    func quitGameAndRetryInstall() {
+        guard let prompt = quitPrompt,
+              let spec = GameDistribution.forGame(prompt.id) else { return }
+        quitPrompt = nil
+        status[prompt.id] = "QUITTING GAME"
+        Task {
+            // Never force-kill an app. Let macOS request a normal quit so the
+            // game can flush preferences and saves. Stop if it refuses.
+            let running = NSRunningApplication.runningApplications(withBundleIdentifier: spec.bundleID)
+            for application in running { _ = application.terminate() }
+            var closed = false
+            for _ in 0..<40 {
+                if NSRunningApplication.runningApplications(withBundleIdentifier: spec.bundleID).isEmpty {
+                    closed = true
+                    break
+                }
+                try? await Task.sleep(nanoseconds: 250_000_000)
+            }
+            status[prompt.id] = "READY"
+            guard closed else {
+                notice = "\(spec.appName) did not quit. Save your game, quit it using its app menu (Command-Q), then retry. Fun City will not force quit or overwrite a running game."
+                return
+            }
+            install(prompt.id, beta: prompt.beta)
+        }
+    }
 
     func isBusy(_ id: String) -> Bool {
         guard let s = status[id] else { return false }
@@ -106,6 +140,12 @@ final class GameReleaseInstaller: ObservableObject {
     func install(_ id: String, beta: Bool = false) {
         guard let spec = GameDistribution.forGame(id), !isBusy(id) else { return }
         let useBeta = beta && id == "drift"
+        // Detect even an older Xcode or manually installed copy of the game.
+        // Prompt *before* downloading, and remember the chosen beta channel.
+        if !NSRunningApplication.runningApplications(withBundleIdentifier: spec.bundleID).isEmpty {
+            quitPrompt = GameQuitPrompt(id: id, appName: spec.appName, beta: useBeta)
+            return
+        }
         Task {
             do {
                 status[id] = "CHECKING RELEASE"
@@ -228,7 +268,9 @@ final class GameReleaseInstaller: ObservableObject {
                 }.value
                 guard actualDigest == expectedDigest else { throw GameDownloadError.checksumMismatch }
                 if !NSRunningApplication.runningApplications(withBundleIdentifier: spec.bundleID).isEmpty {
-                    throw GameDownloadError.gameRunning
+                    status[id] = "READY"
+                    quitPrompt = GameQuitPrompt(id: id, appName: spec.appName, beta: useBeta)
+                    return
                 }
 
                 status[id] = "INSTALLING"
