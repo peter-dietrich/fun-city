@@ -49,6 +49,8 @@ struct GameDistribution: Sendable {
 private struct GitHubRelease: Decodable {
     let tag_name: String
     let assets: [ReleaseAsset]
+    let prerelease: Bool?
+    let draft: Bool?
 }
 
 private struct ReleaseAsset: Decodable {
@@ -68,6 +70,8 @@ enum GameDownloadError: LocalizedError {
     case invalidBundle
     case gameRunning
     case extractionFailed
+    case untrustedSigner
+    case obsoleteVersion
 
     var errorDescription: String? {
         switch self {
@@ -81,6 +85,8 @@ enum GameDownloadError: LocalizedError {
         case .invalidBundle: return "The downloaded archive did not contain the expected macOS game application."
         case .gameRunning: return "Quit the game before reinstalling or updating it."
         case .extractionFailed: return "The game archive could not be extracted."
+        case .untrustedSigner: return "The game failed Apple Developer ID or Gatekeeper verification. Nothing was installed."
+        case .obsoleteVersion: return "A newer game version is installed. Downgrades are blocked."
         }
     }
 }
@@ -95,22 +101,63 @@ final class GameReleaseInstaller: ObservableObject {
         return s != "READY"
     }
 
-    func install(_ id: String) {
+    /// The beta channel is intentionally limited to our signed Vector Drift pilot.
+    /// GitHub prereleases are PUBLIC; never use this for confidential binaries.
+    func install(_ id: String, beta: Bool = false) {
         guard let spec = GameDistribution.forGame(id), !isBusy(id) else { return }
+        let useBeta = beta && id == "drift"
         Task {
             do {
                 status[id] = "CHECKING RELEASE"
-                let releaseURL = URL(string: "https://api.github.com/repos/peter-dietrich/\(spec.repo)/releases/latest")!
-                var request = URLRequest(url: releaseURL)
-                request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-                request.setValue("FunCity/0.2", forHTTPHeaderField: "User-Agent")
-                let (releaseData, releaseResponse) = try await URLSession.shared.data(for: request)
-                guard let http = releaseResponse as? HTTPURLResponse else {
-                    throw GameDownloadError.unexpectedResponse
+                let release: GitHubRelease
+                if useBeta {
+                    // /releases/latest excludes prereleases. Explicitly select the
+                    // newest public Vector Drift beta without affecting other games.
+                    let url = URL(string: "https://api.github.com/repos/peter-dietrich/vector-drift/releases?per_page=30")!
+                    var request = URLRequest(url: url)
+                    request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+                    request.setValue("FunCity-Beta/0.1", forHTTPHeaderField: "User-Agent")
+                    let (data, response) = try await URLSession.shared.data(for: request)
+                    guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                        throw GameDownloadError.unexpectedResponse
+                    }
+                    let releases = try JSONDecoder().decode([GitHubRelease].self, from: data)
+                    guard let current = releases.first(where: {
+                        $0.prerelease == true && $0.draft != true
+                        && $0.tag_name.hasPrefix("v0.14.2-beta.")
+                    }) else { throw GameDownloadError.missingRelease(spec.repo + " beta") }
+                    release = current
+                } else {
+                    let url = URL(string: "https://api.github.com/repos/peter-dietrich/\(spec.repo)/releases/latest")!
+                    var request = URLRequest(url: url)
+                    request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+                    request.setValue("FunCity/0.2", forHTTPHeaderField: "User-Agent")
+                    let (data, response) = try await URLSession.shared.data(for: request)
+                    guard let http = response as? HTTPURLResponse else {
+                        throw GameDownloadError.unexpectedResponse
+                    }
+                    if http.statusCode == 404 { throw GameDownloadError.missingRelease(spec.repo) }
+                    guard http.statusCode == 200 else { throw GameDownloadError.unexpectedResponse }
+                    release = try JSONDecoder().decode(GitHubRelease.self, from: data)
                 }
-                if http.statusCode == 404 { throw GameDownloadError.missingRelease(spec.repo) }
-                guard http.statusCode == 200 else { throw GameDownloadError.unexpectedResponse }
-                let release = try JSONDecoder().decode(GitHubRelease.self, from: releaseData)
+                let receiptKey = "FunCity.InstalledRelease." + id
+                let managedApp = GameDistribution.installedURL(forBundleID: spec.bundleID)
+                if let managedApp {
+                    if UserDefaults.standard.string(forKey: receiptKey) == release.tag_name {
+                        status[id] = "READY"
+                        notice = "\(spec.appName) \(release.tag_name) is already installed."
+                        return
+                    }
+                    if let localVersion = Bundle(url: managedApp)?
+                        .object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
+                        let remoteVersion = String(release.tag_name
+                            .dropFirst(release.tag_name.hasPrefix("v") ? 1 : 0)
+                            .split(separator: "-").first ?? "")
+                        if localVersion.compare(remoteVersion, options: .numeric) == .orderedDescending {
+                            throw GameDownloadError.obsoleteVersion
+                        }
+                    }
+                }
                 let filename = spec.appName + "-macOS.zip"
                 guard let asset = release.assets.first(where: { $0.name == filename }) else {
                     throw GameDownloadError.missingPackage
@@ -180,8 +227,9 @@ final class GameReleaseInstaller: ObservableObject {
                 guard Bundle(url: installedURL)?.bundleIdentifier == spec.bundleID else {
                     throw GameDownloadError.invalidBundle
                 }
+                UserDefaults.standard.set(release.tag_name, forKey: receiptKey)
                 status[id] = "READY"
-                notice = "\(spec.appName) is installed in ~/Applications/Fun City Games. Select PLAY NOW to launch it. macOS may request approval the first time you open a downloaded game."
+                notice = "\(spec.appName) \(release.tag_name) is installed in ~/Applications/Fun City Games. Select PLAY NOW to launch it."
             } catch {
                 status[id] = "READY"
                 notice = error.localizedDescription
@@ -211,6 +259,9 @@ final class GameReleaseInstaller: ObservableObject {
                   Bundle(url: apps[0])?.bundleIdentifier == spec.bundleID else {
                 throw GameDownloadError.invalidBundle
             }
+            // Validate official Apple Developer ID identity, intact signature,
+            // and Gatekeeper acceptance BEFORE copying over an existing game.
+            try verifySignedApp(apps[0], expectedID: spec.bundleID)
             try fm.createDirectory(at: GameDistribution.gamesDirectory, withIntermediateDirectories: true)
             let destination = GameDistribution.gamesDirectory
                 .appendingPathComponent(spec.appName + ".app", isDirectory: true)
@@ -241,4 +292,34 @@ final class GameReleaseInstaller: ObservableObject {
             return destination
         }.value
     }
+    nonisolated private static func verifySignedApp(_ url: URL, expectedID: String) throws {
+        func execute(_ tool: String, _ arguments: [String]) throws -> String {
+            let command = Process()
+            let output = Pipe()
+            command.executableURL = URL(fileURLWithPath: tool)
+            command.arguments = arguments
+            command.standardOutput = output
+            command.standardError = output
+            try command.run()
+            let data = output.fileHandleForReading.readDataToEndOfFile()
+            command.waitUntilExit()
+            guard command.terminationStatus == 0 else {
+                throw GameDownloadError.untrustedSigner
+            }
+            return String(decoding: data, as: UTF8.self)
+        }
+
+        _ = try execute("/usr/bin/codesign", ["--verify", "--deep", "--strict", url.path])
+        let details = try execute("/usr/bin/codesign", ["--display", "--verbose=4", url.path])
+        guard details.contains("TeamIdentifier=6C9RJ9VDE2"),
+              details.contains("Authority=Developer ID Application: Peter Dietrich (6C9RJ9VDE2)"),
+              details.contains("Identifier=" + expectedID) else {
+            throw GameDownloadError.untrustedSigner
+        }
+        let assessment = try execute("/usr/sbin/spctl", ["--assess", "--type", "execute", "--verbose=4", url.path])
+        guard assessment.contains("source=Notarized Developer ID") else {
+            throw GameDownloadError.untrustedSigner
+        }
+    }
+
 }
