@@ -289,6 +289,21 @@ private struct ArcadeLobby: View {
                 .frame(maxWidth: .infinity)
             }
         }
+        .confirmationDialog(
+            "Quit \(installer.quitPrompt?.appName ?? "Game") and install update?",
+            isPresented: Binding(
+                get: { installer.quitPrompt != nil },
+                set: { if !$0 { installer.quitPrompt = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Quit Game & Install Update") {
+                installer.quitGameAndRetryInstall()
+            }
+            Button("Cancel", role: .cancel) { installer.quitPrompt = nil }
+        } message: {
+            Text("Fun City will request a normal quit, wait for the game to close, and resume installation. Save your current game before continuing. It will never force quit.")
+        }
         .alert("FUN CITY", isPresented: Binding(
             get: { library.message != nil || installer.notice != nil },
             set: { if !$0 { library.message = nil; installer.notice = nil } }
