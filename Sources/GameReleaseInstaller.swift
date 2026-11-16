@@ -135,17 +135,28 @@ final class GameReleaseInstaller: ObservableObject {
         return s != "READY"
     }
 
+    /// Displays the managed installation rather than another Xcode-built copy.
+    func installedReleaseLabel(_ id: String) -> String? {
+        guard let spec = GameDistribution.forGame(id),
+              let managed = GameDistribution.installedURL(forBundleID: spec.bundleID) else {
+            return nil
+        }
+        if let receipt = UserDefaults.standard.string(forKey: "FunCity.InstalledRelease." + id) {
+            return "FUN CITY INSTALLED: " + receipt
+        }
+        if let version = Bundle(url: managed)?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
+            return "FUN CITY INSTALLED: v" + version
+        }
+        return "FUN CITY INSTALLED"
+    }
+
     /// The beta channel is intentionally limited to our signed Vector Drift pilot.
     /// GitHub prereleases are PUBLIC; never use this for confidential binaries.
     func install(_ id: String, beta: Bool = false) {
         guard let spec = GameDistribution.forGame(id), !isBusy(id) else { return }
         let useBeta = beta && id == "drift"
-        // Detect even an older Xcode or manually installed copy of the game.
-        // Prompt *before* downloading, and remember the chosen beta channel.
-        if !NSRunningApplication.runningApplications(withBundleIdentifier: spec.bundleID).isEmpty {
-            quitPrompt = GameQuitPrompt(id: id, appName: spec.appName, beta: useBeta)
-            return
-        }
+        // Query release metadata first. Do not interrupt a running game when
+        // it is already the latest installed release.
         Task {
             do {
                 status[id] = "CHECKING RELEASE"

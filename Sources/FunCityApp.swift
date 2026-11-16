@@ -350,6 +350,11 @@ private struct ArcadeLobby: View {
                 Text(game.description)
                     .font(.system(size: 13))
                     .foregroundStyle(.white.opacity(0.62))
+                if let version = installer.installedReleaseLabel(game.id) {
+                    Label(version, systemImage: "checkmark.seal.fill")
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.green)
+                }
                 if game.id == "drift" {
                     Toggle("VECTOR DRIFT BETA TEST (PUBLIC PRERELEASE)", isOn: $driftBetaEnabled)
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
