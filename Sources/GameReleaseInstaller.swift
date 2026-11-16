@@ -148,6 +148,15 @@ final class GameReleaseInstaller: ObservableObject {
                         notice = "\(spec.appName) \(release.tag_name) is already installed."
                         return
                     }
+                    if useBeta,
+                       let oldTag = UserDefaults.standard.string(forKey: receiptKey),
+                       oldTag.hasPrefix("v0.14.2-beta."),
+                       release.tag_name.hasPrefix("v0.14.2-beta."),
+                       let oldBuild = Int(oldTag.split(separator: ".").last ?? ""),
+                       let newBuild = Int(release.tag_name.split(separator: ".").last ?? ""),
+                       oldBuild > newBuild {
+                        throw GameDownloadError.obsoleteVersion
+                    }
                     if let localVersion = Bundle(url: managedApp)?
                         .object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String {
                         let remoteVersion = String(release.tag_name
@@ -261,7 +270,7 @@ final class GameReleaseInstaller: ObservableObject {
             }
             // Validate official Apple Developer ID identity, intact signature,
             // and Gatekeeper acceptance BEFORE copying over an existing game.
-            try verifySignedApp(apps[0], expectedID: spec.bundleID)
+            try Self.verifySignedApp(apps[0], expectedID: spec.bundleID)
             try fm.createDirectory(at: GameDistribution.gamesDirectory, withIntermediateDirectories: true)
             let destination = GameDistribution.gamesDirectory
                 .appendingPathComponent(spec.appName + ".app", isDirectory: true)
