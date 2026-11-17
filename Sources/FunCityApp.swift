@@ -211,6 +211,7 @@ private struct ArcadeLobby: View {
     @StateObject private var installer = GameReleaseInstaller()
     @State private var selection = "drift"
     @State private var showingOriginStory = false
+    @State private var showingHighScores = false
     private var current: ArcadeGame? {
         library.games.first(where: { $0.id == selection }) ?? library.games.first
     }
@@ -289,6 +290,9 @@ private struct ArcadeLobby: View {
         .sheet(isPresented: $showingOriginStory) {
             FunCityOriginStoryView()
         }
+        .sheet(isPresented: $showingHighScores) {
+            FunCityHighScoresView()
+        }
         .task {
             await installer.refreshAvailability()
         }
@@ -342,15 +346,16 @@ private struct ArcadeLobby: View {
                         .foregroundStyle(.white.opacity(0.55))
                         .fixedSize(horizontal: true, vertical: false)
                 }
-                Text("YOUR PERSONAL ARCADE")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .tracking(3.3).foregroundStyle(.orange)
+                Text("Every Great Adventure Started With a Quarter.")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
             Button {
-                showingOriginStory = true
+                showingHighScores = true
             } label: {
-                Label("OUR STORY", systemImage: "book.closed")
+                Label("HIGH SCORES", systemImage: "trophy")
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
                     .foregroundStyle(.orange)
                     .padding(.horizontal, 13)
@@ -359,35 +364,21 @@ private struct ArcadeLobby: View {
                     .overlay(Capsule().stroke(Color.orange.opacity(0.36)))
             }
             .buttonStyle(.plain)
-            .help("The real arcade behind Fun City — Towson, Maryland, circa 1982")
+            .help("Personal bests across all seven Fun City arcade games")
         }
     }
 
     private var originBanner: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text("FUN CITY")
-                    .font(.system(size: 20, weight: .black, design: .rounded))
-                    .tracking(3)
-                    .foregroundStyle(.white)
-                    .shadow(color: .orange.opacity(0.48), radius: 10)
-                Text("EVERY GREAT ADVENTURE STARTED WITH A QUARTER.")
-                    .font(.system(size: 11, weight: .heavy, design: .monospaced))
-                    .tracking(1.0)
-                    .foregroundStyle(.orange)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-                Image(systemName: "circle.grid.cross")
-                    .foregroundStyle(.orange.opacity(0.75))
-                    .accessibilityHidden(true)
-            }
+        VStack(alignment: .leading, spacing: 5) {
             Text("They said arcades would ruin our eyesight, empty our pockets, corrupt our youth, and turn us into video-game addicts.")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.white.opacity(0.78))
+                .lineSpacing(0)
+                .foregroundStyle(.white.opacity(0.81))
                 .fixedSize(horizontal: false, vertical: true)
-            HStack(alignment: .lastTextBaseline, spacing: 8) {
+            HStack(alignment: .center, spacing: 10) {
                 Text("Forty-five years later, we're still playing. Only now, we're building the games.")
                     .font(.system(size: 12, weight: .semibold))
+                    .lineSpacing(0)
                     .foregroundStyle(.white.opacity(0.92))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
@@ -402,13 +393,13 @@ private struct ArcadeLobby: View {
             }
             Text("INSERT QUARTER  ·  IGNORE THE GROWN-UPS  ·  SAVE THE UNIVERSE")
                 .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .tracking(1.6)
-                .foregroundStyle(.orange.opacity(0.82))
-                .padding(.top, 3)
+                .tracking(1.3)
+                .foregroundStyle(.orange.opacity(0.84))
+                .padding(.top, 2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 15)
+        .padding(.horizontal, 17)
+        .padding(.vertical, 11)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             LinearGradient(
