@@ -379,7 +379,7 @@ private struct ArcadeLobby: View {
     }
 
     private var originBanner: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 0) {
             Text("They said arcades would ruin our eyesight, empty our pockets, corrupt our youth, and turn us into video-game addicts.")
                 .font(.system(size: 12, weight: .medium))
                 .lineSpacing(0)
