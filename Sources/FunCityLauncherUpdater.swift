@@ -10,6 +10,7 @@ import SwiftUI
 /// public key has been embedded into its Info.plist at release build time.
 @MainActor
 final class FunCityLauncherUpdater: ObservableObject {
+    static let shared = FunCityLauncherUpdater()
     @Published private(set) var canCheckForUpdates = false
 
     private let controller: SPUStandardUpdaterController?
