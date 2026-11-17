@@ -400,7 +400,7 @@ private struct ArcadeLobby: View {
                     .keyboardShortcut(.return, modifiers: [])
                     if GameDistribution.forGame(game.id) != nil {
                         Button {
-                            installer.install(game.id)
+                            installer.checkOrInstall(game.id)
                         } label: {
                             Label(installer.actionLabel(
                                 for: game.id,
