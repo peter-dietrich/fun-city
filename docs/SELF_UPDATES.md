@@ -8,6 +8,24 @@ An Xcode **Debug** launcher does not self-update. This is intentional: Sparkle m
 
 ## One-time signing key preparation
 
+**Run this only on your own Mac** from the Fun City source checkout. Private signing material must not be pasted into chat, issues, or command-line arguments. First ensure `gh` is available and connected:
+
+```bash
+cd ~/Documents/GitHub/fun-city
+git switch main
+git pull --ff-only origin main
+brew install gh  # skip if already installed
+gh auth login     # skip if already authenticated
+bash scripts/setup-sparkle-signing.sh
+bash scripts/check-release-readiness.sh
+```
+
+The setup script pins the official Sparkle 2.10.1 tarball by SHA-256, reuses an existing Fun City key from the login Keychain or generates a new one, verifies test signing, and sends the public/private values to the matching GitHub Actions secrets via authenticated `gh`. It uses a restrictive temporary directory and deletes the private export on exit. Back up your key separately on encrypted offline media; preserving that key is essential for continuity of deployed updates.
+
+The readiness script checks **presence only** of the eight required GitHub Actions secrets; it neither reads nor prints their values and cannot establish that they are valid. A missing Apple Developer ID secret must be configured by the repository owner with the appropriate Apple signing credentials before a release tag can be published.
+
+
+
 The project owner must initialize and safeguard a Sparkle Ed25519 signing key pair **before publishing the first DMG**. The signing key is independent from the Apple Developer ID certificate.
 
 1. Use the `generate_keys` tool from the pinned Sparkle distribution, available in Xcode's downloaded package artifacts or in the official Sparkle 2.10.1 release. The tool prints a **public key** and stores the private signing key in the local Keychain.
