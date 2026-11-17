@@ -210,6 +210,7 @@ private struct ArcadeLobby: View {
     @StateObject private var library = ArcadeLibrary()
     @StateObject private var installer = GameReleaseInstaller()
     @State private var selection = "drift"
+    @State private var showingOriginStory = false
     private var current: ArcadeGame? {
         library.games.first(where: { $0.id == selection }) ?? library.games.first
     }
@@ -233,18 +234,7 @@ private struct ArcadeLobby: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 25) {
                     header
-                    HStack {
-                        Image(systemName: "star.fill")
-                        Spacer()
-                        Text("THE ARCADE NEVER CLOSES").tracking(3)
-                        Spacer()
-                        Image(systemName: "star.fill")
-                    }
-                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.orange)
-                    .padding(13)
-                    .background(.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 9))
-                    .overlay(RoundedRectangle(cornerRadius: 9).stroke(.orange.opacity(0.23)))
+                    originBanner
 
                     if let game = current { featured(game) }
 
@@ -295,6 +285,9 @@ private struct ArcadeLobby: View {
                 .frame(maxWidth: 1150)
                 .frame(maxWidth: .infinity)
             }
+        }
+        .sheet(isPresented: $showingOriginStory) {
+            FunCityOriginStoryView()
         }
         .task {
             await installer.refreshAvailability()
@@ -354,12 +347,78 @@ private struct ArcadeLobby: View {
                     .tracking(3.3).foregroundStyle(.orange)
             }
             Spacer()
-            Label("FREE PLAY", systemImage: "circle.fill")
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundStyle(.green).padding(12)
-                .background(.green.opacity(0.07), in: Capsule())
-                .overlay(Capsule().stroke(.green.opacity(0.3)))
+            Button {
+                showingOriginStory = true
+            } label: {
+                Label("OUR STORY", systemImage: "book.closed")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.orange)
+                    .padding(.horizontal, 13)
+                    .padding(.vertical, 10)
+                    .background(Color.orange.opacity(0.075), in: Capsule())
+                    .overlay(Capsule().stroke(Color.orange.opacity(0.36)))
+            }
+            .buttonStyle(.plain)
+            .help("The real arcade behind Fun City — Towson, Maryland, circa 1982")
         }
+    }
+
+    private var originBanner: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text("FUN CITY")
+                    .font(.system(size: 20, weight: .black, design: .rounded))
+                    .tracking(3)
+                    .foregroundStyle(.white)
+                    .shadow(color: .orange.opacity(0.48), radius: 10)
+                Text("EVERY GREAT ADVENTURE STARTED WITH A QUARTER.")
+                    .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                    .tracking(1.0)
+                    .foregroundStyle(.orange)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Image(systemName: "circle.grid.cross")
+                    .foregroundStyle(.orange.opacity(0.75))
+                    .accessibilityHidden(true)
+            }
+            Text("They said arcades would ruin our eyesight, empty our pockets, corrupt our youth, and turn us into video-game addicts.")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.white.opacity(0.78))
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .lastTextBaseline, spacing: 8) {
+                Text("Forty-five years later, we're still playing. Only now, we're building the games.")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button {
+                    showingOriginStory = true
+                } label: {
+                    Label("READ OUR STORY", systemImage: "arrow.up.right")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                }
+                .buttonStyle(.bordered)
+                .tint(.orange)
+            }
+            Text("INSERT QUARTER  ·  IGNORE THE GROWN-UPS  ·  SAVE THE UNIVERSE")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .tracking(1.6)
+                .foregroundStyle(.orange.opacity(0.82))
+                .padding(.top, 3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 15)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(red: 0.14, green: 0.09, blue: 0.12),
+                    Color(red: 0.08, green: 0.085, blue: 0.15)
+                ], startPoint: .topLeading, endPoint: .bottomTrailing),
+            in: RoundedRectangle(cornerRadius: 12)
+        )
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.orange.opacity(0.27)))
     }
 
     private func featured(_ game: ArcadeGame) -> some View {
