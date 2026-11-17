@@ -34,7 +34,7 @@
    GENERATE_INFOPLIST_FILE = YES;
    INFOPLIST_KEY_CFBundleDisplayName = "Fun City Arcade";
    MARKETING_VERSION = 0.4.0;
-   CURRENT_PROJECT_VERSION = 19;
+   CURRENT_PROJECT_VERSION = 20;
    INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
    MACOSX_DEPLOYMENT_TARGET = 13.0;
    PRODUCT_BUNDLE_IDENTIFIER = "io.funcity.arcade";
@@ -48,7 +48,7 @@
    GENERATE_INFOPLIST_FILE = YES;
    INFOPLIST_KEY_CFBundleDisplayName = "Fun City Arcade";
    MARKETING_VERSION = 0.4.0;
-   CURRENT_PROJECT_VERSION = 19;
+   CURRENT_PROJECT_VERSION = 20;
    INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
    MACOSX_DEPLOYMENT_TARGET = 13.0;
    PRODUCT_BUNDLE_IDENTIFIER = "io.funcity.arcade";
