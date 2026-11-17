@@ -162,12 +162,11 @@ final class GameReleaseInstaller: ObservableObject {
         if let state = status[id], state != "READY" { return state }
         if updateAvailable[id] != nil { return "UPDATE GAME" }
         if downloadAvailable[id] != nil { return "DOWNLOAD GAME" }
-        // Do not advertise a download when no release has been discovered.
         return hasApp ? "CHECK / UPDATE" : "CHECK RELEASE"
     }
 
-    /// When no signed package is known, check instead of attempting an install.
-    /// A newly published release becomes available through the usual button.
+    /// Check the selected game's release directly rather than scanning every
+    /// repository again. An installed/current game is not a missing release.
     func checkOrInstall(_ id: String) {
         guard let spec = GameDistribution.forGame(id), !isBusy(id) else { return }
         if updateAvailable[id] != nil || downloadAvailable[id] != nil {
@@ -176,13 +175,68 @@ final class GameReleaseInstaller: ObservableObject {
         }
         Task {
             status[id] = "CHECKING RELEASE"
-            await refreshAvailability()
-            status[id] = "READY"
-            if let tag = updateAvailable[id] ?? downloadAvailable[id] {
-                let label = updateAvailable[id] != nil ? "UPDATE GAME" : "DOWNLOAD GAME"
-                notice = "\(spec.appName) \(tag) is available. Select \(label) to install it."
-            } else {
-                notice = "No new signed release is ready to install for \(spec.appName). It may not have been published yet, or GitHub may be unreachable. Select CHECK RELEASE to try again."
+            defer { status[id] = "READY" }
+
+            do {
+                let release = try await Self.fetchRelease(spec: spec)
+                guard release.assets.contains(where: { $0.name == spec.appName + "-macOS.zip" }) else {
+                    throw GameDownloadError.missingPackage
+                }
+                if let installedApp = GameDistribution.installedURL(forBundleID: spec.bundleID) {
+                    let receipt = UserDefaults.standard.string(forKey: "FunCity.InstalledRelease." + id)
+                    if receipt == release.tag_name {
+                        notice = "\(spec.appName) \(release.tag_name) is already installed and up to date."
+                        return
+                    }
+
+                    let installedBundle = Bundle(url: installedApp)
+                    let localVersion = installedBundle?
+                        .object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+                    let remoteVersion = String(release.tag_name
+                        .dropFirst(release.tag_name.hasPrefix("v") ? 1 : 0)
+                        .split(separator: "-").first ?? "")
+
+                    if let localVersion,
+                       localVersion.compare(remoteVersion, options: .numeric) == .orderedDescending {
+                        notice = "\(spec.appName) v\(localVersion) is installed and is newer than the published release \(release.tag_name). No downgrade will be attempted."
+                        return
+                    }
+                    if let receipt, receipt.hasPrefix("v"), release.tag_name.hasPrefix("v"),
+                       String(receipt.dropFirst().split(separator: "-").first ?? "") == remoteVersion,
+                       let oldBuild = Int(receipt.split(separator: ".").last ?? ""),
+                       let newBuild = Int(release.tag_name.split(separator: ".").last ?? ""),
+                       oldBuild > newBuild {
+                        notice = "\(spec.appName) \(receipt) is already installed; the published \(release.tag_name) is older. No downgrade will be attempted."
+                        return
+                    }
+                    if receipt == nil,
+                       let localVersion,
+                       localVersion.compare(remoteVersion, options: .numeric) == .orderedSame,
+                       let installedBuild = Int(installedBundle?
+                           .object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""),
+                       let newBuild = Int(release.tag_name.split(separator: ".").last ?? ""),
+                       installedBuild >= newBuild {
+                        notice = "\(spec.appName) v\(localVersion) is installed; no newer published build was found."
+                        return
+                    }
+                    updateAvailable[id] = release.tag_name
+                    notice = "\(spec.appName) \(release.tag_name) is available. Select UPDATE GAME to install it."
+                } else {
+                    downloadAvailable[id] = release.tag_name
+                    notice = "\(spec.appName) \(release.tag_name) is published. Select DOWNLOAD GAME to install it."
+                }
+            } catch GameDownloadError.missingRelease {
+                if let installed = installedReleaseLabel(id) {
+                    notice = "\(installed). No downloadable release is currently visible in this build channel; the installed game is unchanged."
+                } else {
+                    notice = "\(spec.appName) does not yet have a published downloadable release in this build channel. Nothing was installed."
+                }
+            } catch {
+                if let installed = installedReleaseLabel(id) {
+                    notice = "\(installed). The GitHub release check could not complete: \(error.localizedDescription). Your installed game is unchanged."
+                } else {
+                    notice = "Could not check the GitHub release for \(spec.appName): \(error.localizedDescription). Nothing was installed."
+                }
             }
         }
     }
