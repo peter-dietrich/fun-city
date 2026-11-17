@@ -162,7 +162,29 @@ final class GameReleaseInstaller: ObservableObject {
         if let state = status[id], state != "READY" { return state }
         if updateAvailable[id] != nil { return "UPDATE GAME" }
         if downloadAvailable[id] != nil { return "DOWNLOAD GAME" }
-        return hasApp ? "CHECK / UPDATE" : "DOWNLOAD GAME"
+        // Do not advertise a download when no release has been discovered.
+        return hasApp ? "CHECK / UPDATE" : "CHECK RELEASE"
+    }
+
+    /// When no signed package is known, check instead of attempting an install.
+    /// A newly published release becomes available through the usual button.
+    func checkOrInstall(_ id: String) {
+        guard let spec = GameDistribution.forGame(id), !isBusy(id) else { return }
+        if updateAvailable[id] != nil || downloadAvailable[id] != nil {
+            install(id)
+            return
+        }
+        Task {
+            status[id] = "CHECKING RELEASE"
+            await refreshAvailability()
+            status[id] = "READY"
+            if let tag = updateAvailable[id] ?? downloadAvailable[id] {
+                let label = updateAvailable[id] != nil ? "UPDATE GAME" : "DOWNLOAD GAME"
+                notice = "\(spec.appName) \(tag) is available. Select \(label) to install it."
+            } else {
+                notice = "No new signed release is ready to install for \(spec.appName). It may not have been published yet, or GitHub may be unreachable. Select CHECK RELEASE to try again."
+            }
+        }
     }
 
     /// Xcode Debug builds can install signed development prereleases, and
