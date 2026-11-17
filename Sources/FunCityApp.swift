@@ -210,6 +210,7 @@ private struct ArcadeLobby: View {
     @StateObject private var library = ArcadeLibrary()
     @StateObject private var installer = GameReleaseInstaller()
     @AppStorage("FunCity.VectorDriftBetaEnabled") private var driftBetaEnabled = false
+    @AppStorage("FunCity.VectorSwarmBetaEnabled") private var swarmBetaEnabled = false
     @State private var selection = "drift"
     private var current: ArcadeGame? {
         library.games.first(where: { $0.id == selection }) ?? library.games.first
@@ -290,10 +291,13 @@ private struct ArcadeLobby: View {
             }
         }
         .task {
-            await installer.refreshAvailability(betaForDrift: driftBetaEnabled)
+            await installer.refreshAvailability(betaForDrift: driftBetaEnabled, betaForSwarm: swarmBetaEnabled)
         }
         .onChange(of: driftBetaEnabled) { value in
-            Task { await installer.refreshAvailability(betaForDrift: value) }
+            Task { await installer.refreshAvailability(betaForDrift: value, betaForSwarm: swarmBetaEnabled) }
+        }
+        .onChange(of: swarmBetaEnabled) { value in
+            Task { await installer.refreshAvailability(betaForDrift: driftBetaEnabled, betaForSwarm: value) }
         }
         .confirmationDialog(
             "Quit \(installer.quitPrompt?.appName ?? "Game") and install update?",
@@ -378,6 +382,12 @@ private struct ArcadeLobby: View {
                         .tint(.orange)
                         .help("Development only. Download the newest signed v0.14.2-beta prerelease from GitHub.")
                 }
+                if game.id == "swarm" {
+                    Toggle("VECTOR SWARM BETA TEST (PUBLIC PRERELEASE)", isOn: $swarmBetaEnabled)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .tint(.orange)
+                        .help("Development only. Download the newest signed v0.1.0-beta prerelease from GitHub.")
+                }
                 Spacer(minLength: 0)
                 HStack(spacing: 10) {
                     Button {
@@ -394,12 +404,12 @@ private struct ArcadeLobby: View {
                     .keyboardShortcut(.return, modifiers: [])
                     if GameDistribution.forGame(game.id) != nil {
                         Button {
-                            installer.install(game.id, beta: game.id == "drift" && driftBetaEnabled)
+                            installer.install(game.id, beta: (game.id == "drift" && driftBetaEnabled) || (game.id == "swarm" && swarmBetaEnabled))
                         } label: {
                             Label(installer.actionLabel(
                                 for: game.id,
                                 hasApp: library.location(for: game) != nil,
-                                beta: game.id == "drift" && driftBetaEnabled
+                                beta: (game.id == "drift" && driftBetaEnabled) || (game.id == "swarm" && swarmBetaEnabled)
                             ), systemImage: "arrow.down.circle")
                         }
                         .buttonStyle(.borderedProminent)
