@@ -34,12 +34,13 @@
    GENERATE_INFOPLIST_FILE = YES;
    INFOPLIST_KEY_CFBundleDisplayName = "Fun City Arcade";
    MARKETING_VERSION = 0.4.0;
-   CURRENT_PROJECT_VERSION = 19;
+   CURRENT_PROJECT_VERSION = 20;
    INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
    MACOSX_DEPLOYMENT_TARGET = 13.0;
    PRODUCT_BUNDLE_IDENTIFIER = "io.funcity.arcade";
    PRODUCT_NAME = "$(TARGET_NAME)";
    SUPPORTED_PLATFORMS = macosx;
+   SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
    SWIFT_VERSION = 5.0;
   }; name = Debug; };
   A0000000000000000000000C = { isa = XCBuildConfiguration; buildSettings = {
@@ -47,7 +48,7 @@
    GENERATE_INFOPLIST_FILE = YES;
    INFOPLIST_KEY_CFBundleDisplayName = "Fun City Arcade";
    MARKETING_VERSION = 0.4.0;
-   CURRENT_PROJECT_VERSION = 19;
+   CURRENT_PROJECT_VERSION = 20;
    INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
    MACOSX_DEPLOYMENT_TARGET = 13.0;
    PRODUCT_BUNDLE_IDENTIFIER = "io.funcity.arcade";
@@ -60,6 +61,7 @@
    CODE_SIGNING_ALLOWED = NO;
    SDKROOT = macosx;
    MACOSX_DEPLOYMENT_TARGET = 13.0;
+   SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
    SWIFT_VERSION = 5.0;
   }; name = Debug; };
   A0000000000000000000000E = { isa = XCBuildConfiguration; buildSettings = {
