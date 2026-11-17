@@ -13,6 +13,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Verify retired-game catalog policy
         run: bash Tests/check-retired-catalog.sh
+      - name: Verify release setup script syntax
+        run: |
+          bash -n scripts/setup-sparkle-signing.sh
+          bash -n scripts/check-release-readiness.sh
       - name: Verify development and distribution compile-time channels
         run: |
           set -euo pipefail
