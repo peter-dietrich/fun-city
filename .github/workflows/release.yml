@@ -34,6 +34,13 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             test "$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$APP/Contents/Info.plist")" = "$SPARKLE_PUBLIC_ED_KEY"
             test "$(/usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$APP/Contents/Info.plist")" = "https://github.com/peter-dietrich/fun-city/releases/latest/download/appcast.xml"
+            VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+            BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Contents/Info.plist")"
+            test "$GITHUB_REF_NAME" = "v$VERSION" || {
+              echo "::error::Release tag must match app marketing version (expected v$VERSION)"
+              exit 1
+            }
+            [[ "$BUILD" =~ ^[0-9]+$ ]] || { echo "::error::CFBundleVersion must be an integer"; exit 1; }
           fi
 
       - name: Package an unsigned developer-preview DMG
@@ -123,6 +130,7 @@ jobs:
             "https://github.com/sparkle-project/Sparkle/releases/download/2.10.1/Sparkle-2.10.1.tar.xz" \
             --output "$RUNNER_TEMP/Sparkle-2.10.1.tar.xz"
           mkdir -p "$RUNNER_TEMP/sparkle-tools"
+          printf '%s  %s\n' "1a856d2a9edb8e628de88121d7be04cf0e2167f8641650b78fca00b14244cf27" "$RUNNER_TEMP/Sparkle-2.10.1.tar.xz" | shasum -a 256 --check
           tar -xJf "$RUNNER_TEMP/Sparkle-2.10.1.tar.xz" -C "$RUNNER_TEMP/sparkle-tools"
           SIGN_TOOL="$(find "$RUNNER_TEMP/sparkle-tools" -type f -name sign_update -print -quit)"
           test -n "$SIGN_TOOL"
