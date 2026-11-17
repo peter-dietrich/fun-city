@@ -16,11 +16,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build Fun City
+        env:
+          SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
         run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            test -n "$SPARKLE_PUBLIC_ED_KEY" || {
+              echo "::error::Missing SPARKLE_PUBLIC_ED_KEY. Do not publish a launcher without the updater verification key."
+              exit 1
+            }
+          fi
           xcodebuild -project FunCity.xcodeproj -scheme FunCity -configuration Release \
             -derivedDataPath "$RUNNER_TEMP/derived" -destination 'platform=macOS' \
-            CODE_SIGNING_ALLOWED=NO build
-          test -d "$RUNNER_TEMP/derived/Build/Products/Release/FunCity.app"
+            SPARKLE_PUBLIC_ED_KEY="$SPARKLE_PUBLIC_ED_KEY" CODE_SIGNING_ALLOWED=NO build
+          APP="$RUNNER_TEMP/derived/Build/Products/Release/FunCity.app"
+          test -d "$APP"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            test "$(/usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$APP/Contents/Info.plist")" = "$SPARKLE_PUBLIC_ED_KEY"
+            test "$(/usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$APP/Contents/Info.plist")" = "https://github.com/peter-dietrich/fun-city/releases/latest/download/appcast.xml"
+          fi
 
       - name: Package an unsigned developer-preview DMG
         if: "!startsWith(github.ref, 'refs/tags/v')"
@@ -94,11 +108,75 @@ jobs:
           xcrun stapler staple "dist/FunCity-macOS.dmg"
           (cd dist && shasum -a 256 FunCity-macOS.dmg > FunCity-macOS.dmg.sha256)
 
-      - name: Publish Fun City installer
+      - name: Create EdDSA-signed Sparkle appcast
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          SPARKLE_EDDSA_PRIVATE_KEY: ${{ secrets.SPARKLE_EDDSA_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SPARKLE_EDDSA_PRIVATE_KEY" || {
+            echo "::error::Missing SPARKLE_EDDSA_PRIVATE_KEY. Signed updates cannot be published."
+            exit 1
+          }
+          # Release-pinned Sparkle tools, separate from the private signing key.
+          curl --fail --location --retry 3 \
+            "https://github.com/sparkle-project/Sparkle/releases/download/2.10.1/Sparkle-2.10.1.tar.xz" \
+            --output "$RUNNER_TEMP/Sparkle-2.10.1.tar.xz"
+          mkdir -p "$RUNNER_TEMP/sparkle-tools"
+          tar -xJf "$RUNNER_TEMP/Sparkle-2.10.1.tar.xz" -C "$RUNNER_TEMP/sparkle-tools"
+          SIGN_TOOL="$(find "$RUNNER_TEMP/sparkle-tools" -type f -name sign_update -print -quit)"
+          test -n "$SIGN_TOOL"
+          chmod +x "$SIGN_TOOL"
+          # Feed input over stdin; the secret must not appear on the command line.
+          SIGNING_OUTPUT="$(printf '%s' "$SPARKLE_EDDSA_PRIVATE_KEY" | "$SIGN_TOOL" --ed-key-file - "dist/FunCity-macOS.dmg")"
+          export SIGNING_OUTPUT
+          export GITHUB_REF_NAME
+          export APP_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$RUNNER_TEMP/derived/Build/Products/Release/FunCity.app/Contents/Info.plist")"
+          export APP_BUILD="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$RUNNER_TEMP/derived/Build/Products/Release/FunCity.app/Contents/Info.plist")"
+          python3 - <<'PY'
+          import os, re, pathlib
+          from datetime import datetime, timezone
+          from email.utils import format_datetime
+          from xml.sax.saxutils import escape
+          from xml.etree import ElementTree as ET
+
+          signature_output = os.environ['SIGNING_OUTPUT']
+          signature = re.search(r'sparkle:edSignature="([^"]+)"', signature_output)
+          length = re.search(r'length="([0-9]+)"', signature_output)
+          if not (signature and length):
+              raise SystemExit("Sparkle signing output did not include signature and length")
+          version = os.environ['APP_VERSION']
+          build = os.environ['APP_BUILD']
+          tag = os.environ['GITHUB_REF_NAME']
+          url = f'https://github.com/peter-dietrich/fun-city/releases/download/{tag}/FunCity-macOS.dmg'
+          xml = f'''<?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+            <channel>
+              <title>Fun City Arcade Updates</title>
+              <link>https://github.com/peter-dietrich/fun-city/releases</link>
+              <description>Signed Fun City Arcade launcher updates</description>
+              <item>
+                <title>Fun City {escape(version)} ({escape(build)})</title>
+                <pubDate>{format_datetime(datetime.now(timezone.utc))}</pubDate>
+                <sparkle:version>{escape(build)}</sparkle:version>
+                <sparkle:shortVersionString>{escape(version)}</sparkle:shortVersionString>
+                <enclosure url="{escape(url)}" sparkle:edSignature="{signature.group(1)}" length="{length.group(1)}" type="application/octet-stream"/>
+              </item>
+            </channel>
+          </rss>
+          '''
+          path = pathlib.Path('dist/appcast.xml')
+          path.write_text(xml, encoding='utf-8')
+          ET.parse(path)
+          print('Signed Sparkle feed generated for', tag, 'build', build)
+          PY
+
+      - name: Publish Fun City installer and updater feed
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           gh release create "$GITHUB_REF_NAME" \
-            "dist/FunCity-macOS.dmg" "dist/FunCity-macOS.dmg.sha256" \
+            "dist/FunCity-macOS.dmg" "dist/FunCity-macOS.dmg.sha256" "dist/appcast.xml" \
             --title "Fun City $GITHUB_REF_NAME" --generate-notes
