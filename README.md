@@ -67,6 +67,12 @@ macOS 13+, Xcode 16+; SwiftUI and AppKit. This is intended for personal, local u
 
 The launcher uses its original typographic FUN CITY marquee and original procedural vector-style cabinet illustrations for all seven built-in games. Both the featured-game preview and the arcade floor use these generated-in-code drawings, without bundled JPEG logos. Selecting or launching a cabinet plays a short original synthesized two-note arcade chime. The individual games still launch independently via their existing app lookups.
 
+## Launcher self-updates
+
+The **Fun City launcher** now integrates Sparkle for macOS update checking and installation after initial distribution. This is independent from the existing seven-game installer. A signed public launcher release supplies a Developer-ID-signed/notarized DMG and an EdDSA-signed archive referenced by `appcast.xml` from its GitHub Release assets. The **Fun City Arcade → Check for Fun City Updates…** menu item is available only when the signed updater is configured.
+
+**Setup required before public release:** configure the Sparkle public/private signing key pair in GitHub Actions secrets, and perform a signed old-to-new DMG update test. Xcode Debug builds deliberately cannot self-update. See [Self-update release setup and verification](docs/SELF_UPDATES.md).
+
 ## Downloadable distribution (release pipeline)
 
 **Fun City installs from one downloadable macOS DMG**, while each game publishes its own signed, notarized `.app` inside a versioned ZIP file on its separate GitHub Releases page.
