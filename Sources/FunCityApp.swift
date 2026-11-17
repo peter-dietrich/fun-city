@@ -209,8 +209,6 @@ private final class ArcadeChime {
 private struct ArcadeLobby: View {
     @StateObject private var library = ArcadeLibrary()
     @StateObject private var installer = GameReleaseInstaller()
-    @AppStorage("FunCity.VectorDriftBetaEnabled") private var driftBetaEnabled = false
-    @AppStorage("FunCity.VectorSwarmBetaEnabled") private var swarmBetaEnabled = false
     @State private var selection = "drift"
     private var current: ArcadeGame? {
         library.games.first(where: { $0.id == selection }) ?? library.games.first
@@ -291,13 +289,7 @@ private struct ArcadeLobby: View {
             }
         }
         .task {
-            await installer.refreshAvailability(betaForDrift: driftBetaEnabled, betaForSwarm: swarmBetaEnabled)
-        }
-        .onChange(of: driftBetaEnabled) { value in
-            Task { await installer.refreshAvailability(betaForDrift: value, betaForSwarm: swarmBetaEnabled) }
-        }
-        .onChange(of: swarmBetaEnabled) { value in
-            Task { await installer.refreshAvailability(betaForDrift: driftBetaEnabled, betaForSwarm: value) }
+            await installer.refreshAvailability()
         }
         .confirmationDialog(
             "Quit \(installer.quitPrompt?.appName ?? "Game") and install update?",
@@ -324,15 +316,31 @@ private struct ArcadeLobby: View {
         }
     }
 
+    private static var launcherVersionLabel: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
+        #if DEBUG
+        return "v\(version) (\(build)) DEV"
+        #else
+        return "v\(version) (\(build))"
+        #endif
+    }
+
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 5) {
-                Text("FUN CITY ARCADE")
-                    .font(.system(size: 34, weight: .black, design: .rounded))
-                    .tracking(3)
-                    .lineLimit(1).minimumScaleFactor(0.75)
-                    .shadow(color: .pink.opacity(0.9), radius: 16)
-                    .accessibilityHint("Welcome to Fun City Arcade")
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text("FUN CITY ARCADE")
+                        .font(.system(size: 34, weight: .black, design: .rounded))
+                        .tracking(3)
+                        .lineLimit(1).minimumScaleFactor(0.75)
+                        .shadow(color: .pink.opacity(0.9), radius: 16)
+                        .accessibilityHint("Welcome to Fun City Arcade")
+                    Text(Self.launcherVersionLabel)
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white.opacity(0.55))
+                        .fixedSize(horizontal: true, vertical: false)
+                }
                 Text("YOUR PERSONAL ARCADE")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .tracking(3.3).foregroundStyle(.orange)
@@ -376,18 +384,6 @@ private struct ArcadeLobby: View {
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundStyle(.cyan)
                 }
-                if game.id == "drift" {
-                    Toggle("VECTOR DRIFT BETA TEST (PUBLIC PRERELEASE)", isOn: $driftBetaEnabled)
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .tint(.orange)
-                        .help("Development only. Download the newest signed v0.14.2-beta prerelease from GitHub.")
-                }
-                if game.id == "swarm" {
-                    Toggle("VECTOR SWARM BETA TEST (PUBLIC PRERELEASE)", isOn: $swarmBetaEnabled)
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .tint(.orange)
-                        .help("Development only. Download the newest signed v0.1.0-beta prerelease from GitHub.")
-                }
                 Spacer(minLength: 0)
                 HStack(spacing: 10) {
                     Button {
@@ -404,12 +400,11 @@ private struct ArcadeLobby: View {
                     .keyboardShortcut(.return, modifiers: [])
                     if GameDistribution.forGame(game.id) != nil {
                         Button {
-                            installer.install(game.id, beta: (game.id == "drift" && driftBetaEnabled) || (game.id == "swarm" && swarmBetaEnabled))
+                            installer.install(game.id)
                         } label: {
                             Label(installer.actionLabel(
                                 for: game.id,
-                                hasApp: library.location(for: game) != nil,
-                                beta: (game.id == "drift" && driftBetaEnabled) || (game.id == "swarm" && swarmBetaEnabled)
+                                hasApp: library.location(for: game) != nil
                             ), systemImage: "arrow.down.circle")
                         }
                         .buttonStyle(.borderedProminent)
