@@ -9,7 +9,7 @@ umask 077
 readonly REPOSITORY="peter-dietrich/fun-city"
 readonly ACCOUNT="io.funcity.arcade"
 readonly SPARKLE_VERSION="2.10.1"
-SPARKLE_KEY_BACKUP_PATH=""
+SPARKLE_KEY_BACKUP_PATH="${SPARKLE_KEY_BACKUP_PATH:-}"
 readonly SPARKLE_SHA256="1a856d2a9edb8e628de88121d7be04cf0e2167f8641650b78fca00b14244cf27"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
