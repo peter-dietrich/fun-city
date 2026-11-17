@@ -10,7 +10,15 @@ struct FunCityApp: App {
             ArcadeLobby().preferredColorScheme(.dark).frame(minWidth: 800, minHeight: 600)
         }
         .defaultSize(width: 1100, height: 770)
-        .commands { CommandGroup(replacing: .newItem) {} }
+        .commands { 
+            CommandGroup(replacing: .newItem) {}
+            CommandGroup(after: .appInfo) {
+                Button("Check for Fun City Updates…") {
+                    FunCityLauncherUpdater.shared.checkForUpdates()
+                }
+                .disabled(!FunCityLauncherUpdater.shared.canCheckForUpdates)
+            }
+        }
     }
 }
 
@@ -369,7 +377,7 @@ private struct ArcadeLobby: View {
     }
 
     private var originBanner: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 2) {
             Text("They said arcades would ruin our eyesight, empty our pockets, corrupt our youth, and turn us into video-game addicts.")
                 .font(.system(size: 12, weight: .medium))
                 .lineSpacing(0)
@@ -395,7 +403,7 @@ private struct ArcadeLobby: View {
                 .font(.system(size: 9, weight: .bold, design: .monospaced))
                 .tracking(1.3)
                 .foregroundStyle(.orange.opacity(0.84))
-                .padding(.top, 2)
+                .padding(.top, 5)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 17)
