@@ -6,7 +6,7 @@ import UniformTypeIdentifiers
 @main
 struct FunCityApp: App {
     var body: some Scene {
-        WindowGroup("Fun City") {
+        WindowGroup("Fun City Arcade") {
             ArcadeLobby().preferredColorScheme(.dark).frame(minWidth: 800, minHeight: 600)
         }
         .defaultSize(width: 1100, height: 770)
@@ -277,7 +277,7 @@ private struct ArcadeLobby: View {
                         }
                     }
                     HStack {
-                        Text("FUN CITY / REBUILT FOR MAC")
+                        Text("FUN CITY ARCADE / REBUILT FOR MAC")
                         Spacer()
                         Text("\(library.games.count) CABINETS")
                     }
@@ -288,6 +288,12 @@ private struct ArcadeLobby: View {
                 .frame(maxWidth: 1150)
                 .frame(maxWidth: .infinity)
             }
+        }
+        .task {
+            await installer.refreshAvailability(betaForDrift: driftBetaEnabled)
+        }
+        .onChange(of: driftBetaEnabled) { value in
+            Task { await installer.refreshAvailability(betaForDrift: value) }
         }
         .confirmationDialog(
             "Quit \(installer.quitPrompt?.appName ?? "Game") and install update?",
@@ -317,9 +323,10 @@ private struct ArcadeLobby: View {
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 5) {
-                Text("FUN CITY")
-                    .font(.system(size: 36, weight: .black, design: .rounded))
-                    .tracking(5)
+                Text("FUN CITY ARCADE")
+                    .font(.system(size: 34, weight: .black, design: .rounded))
+                    .tracking(3)
+                    .lineLimit(1).minimumScaleFactor(0.75)
                     .shadow(color: .pink.opacity(0.9), radius: 16)
                     .accessibilityHint("Welcome to Fun City Arcade")
                 Text("YOUR PERSONAL ARCADE")
@@ -355,6 +362,16 @@ private struct ArcadeLobby: View {
                         .font(.system(size: 10, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.green)
                 }
+                if let tag = installer.updateAvailable[game.id] {
+                    Label("UPDATE AVAILABLE: " + tag, systemImage: "arrow.down.circle.fill")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.orange)
+                } else if installer.downloadAvailable[game.id] != nil,
+                          GameDistribution.installedURL(forBundleID: game.bundleID ?? "") == nil {
+                    Label("DOWNLOAD AVAILABLE", systemImage: "icloud.and.arrow.down")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.cyan)
+                }
                 if game.id == "drift" {
                     Toggle("VECTOR DRIFT BETA TEST (PUBLIC PRERELEASE)", isOn: $driftBetaEnabled)
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
@@ -379,8 +396,11 @@ private struct ArcadeLobby: View {
                         Button {
                             installer.install(game.id, beta: game.id == "drift" && driftBetaEnabled)
                         } label: {
-                            Label(installer.status[game.id] ?? (game.id == "drift" && driftBetaEnabled ? "BETA: CHECK / INSTALL" : (library.location(for: game) == nil ? "DOWNLOAD GAME" : "CHECK / UPDATE")),
-                                  systemImage: "arrow.down.circle")
+                            Label(installer.actionLabel(
+                                for: game.id,
+                                hasApp: library.location(for: game) != nil,
+                                beta: game.id == "drift" && driftBetaEnabled
+                            ), systemImage: "arrow.down.circle")
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.purple)
