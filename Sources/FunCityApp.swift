@@ -270,7 +270,15 @@ private struct ArcadeLobby: View {
                         ForEach(library.games) { game in
                             Button { ArcadeChime.shared.play(); selection = game.id } label: {
                                 CabinetCard(game: game, selected: current?.id == game.id,
-                                            available: library.location(for: game) != nil)
+                                            managedInstalled: game.bundleID.map {
+                                                GameDistribution.installedURL(forBundleID: $0) != nil
+                                            } ?? false,
+                                            localLinked: library.location(for: game) != nil,
+                                            updateAvailable: installer.updateAvailable[game.id] != nil,
+                                            downloadAvailable: installer.downloadAvailable[game.id] != nil,
+                                            releaseLookup: installer.releaseLookup[game.id],
+                                            checkingReleases: installer.checkingUpdates,
+                                            busy: installer.isBusy(game.id))
                             }
                             .buttonStyle(.plain)
                         }
@@ -443,8 +451,50 @@ private struct ArcadeLobby: View {
 private struct CabinetCard: View {
     let game: ArcadeGame
     let selected: Bool
-    let available: Bool
+    let managedInstalled: Bool
+    let localLinked: Bool
+    let updateAvailable: Bool
+    let downloadAvailable: Bool
+    let releaseLookup: GameReleaseLookupState?
+    let checkingReleases: Bool
+    let busy: Bool
+
+    private var cabinetStatus: (title: String, symbol: String, color: Color) {
+        if busy {
+            return ("INSTALL / CHECK IN PROGRESS", "arrow.triangle.2.circlepath", .cyan)
+        }
+        // An actionable update always outranks ordinary playability.
+        if updateAvailable {
+            return ("UPDATE AVAILABLE", "arrow.up.circle.fill", .orange)
+        }
+        // Xcode-linked applications remain playable but are not a
+        // verified managed Fun City installation.
+        if managedInstalled {
+            return ("READY TO LAUNCH", "checkmark.circle.fill", .green)
+        }
+        if downloadAvailable {
+            return ("DOWNLOAD AVAILABLE", "arrow.down.circle.fill", .cyan)
+        }
+        if localLinked {
+            return ("LOCAL BUILD LINKED", "link", .gray)
+        }
+        if checkingReleases && releaseLookup == nil {
+            return ("CHECKING RELEASE", "arrow.triangle.2.circlepath", .gray)
+        }
+        switch releaseLookup {
+        case .notPublished:
+            return ("RELEASE PENDING", "clock", .orange)
+        case .unavailable, .none:
+            return ("CHECK RELEASE", "questionmark.circle", .gray)
+        case .published:
+            // Defensive fallback: a published game without a local app
+            // should always offer an install, even after a state refresh.
+            return ("DOWNLOAD AVAILABLE", "arrow.down.circle.fill", .cyan)
+        }
+    }
+
     var body: some View {
+        let state = cabinetStatus
         VStack(alignment: .leading, spacing: 12) {
             CabinetArt(kind: game.artwork, accent: game.accent)
                 .frame(height: 125)
@@ -461,10 +511,9 @@ private struct CabinetCard: View {
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(selected ? game.accent : .gray)
             }
-            Label(available ? "READY TO LAUNCH" : "LINK GAME TO PLAY",
-                  systemImage: available ? "checkmark.circle" : "link")
+            Label(state.title, systemImage: state.symbol)
                 .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundStyle(available ? .green : .orange)
+                .foregroundStyle(state.color)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
