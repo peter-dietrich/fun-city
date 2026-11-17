@@ -5,6 +5,8 @@ import UniformTypeIdentifiers
 
 @main
 struct FunCityApp: App {
+    @StateObject private var launcherUpdater = FunCityLauncherUpdater.shared
+
     var body: some Scene {
         WindowGroup("Fun City Arcade") {
             ArcadeLobby().preferredColorScheme(.dark).frame(minWidth: 800, minHeight: 600)
@@ -14,9 +16,9 @@ struct FunCityApp: App {
             CommandGroup(replacing: .newItem) {}
             CommandGroup(after: .appInfo) {
                 Button("Check for Fun City Updates…") {
-                    FunCityLauncherUpdater.shared.checkForUpdates()
+                    launcherUpdater.checkForUpdates()
                 }
-                .disabled(!FunCityLauncherUpdater.shared.canCheckForUpdates)
+                .disabled(!launcherUpdater.canCheckForUpdates)
             }
         }
     }
