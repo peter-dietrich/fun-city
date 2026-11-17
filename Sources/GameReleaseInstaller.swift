@@ -108,7 +108,7 @@ final class GameReleaseInstaller: ObservableObject {
 
     /// Queries release metadata only: never downloads binaries, quits games,
     /// or installs anything without an explicit player action.
-    func refreshAvailability(betaForDrift: Bool) async {
+    func refreshAvailability(betaForDrift: Bool, betaForSwarm: Bool = false) async {
         guard !checkingUpdates else { return }
         checkingUpdates = true
         defer { checkingUpdates = false }
@@ -117,7 +117,7 @@ final class GameReleaseInstaller: ObservableObject {
 
         for id in ["drift", "siege", "swarm", "vortex", "barrage", "soar", "aces"] {
             guard let spec = GameDistribution.forGame(id) else { continue }
-            let beta = betaForDrift && id == "drift"
+            let beta = (betaForDrift && id == "drift") || (betaForSwarm && id == "swarm")
             do {
                 let release = try await Self.fetchRelease(spec: spec, beta: beta)
                 let filename = spec.appName + "-macOS.zip"
@@ -145,7 +145,7 @@ final class GameReleaseInstaller: ObservableObject {
                     }
                 }
                 if beta,
-                   release.tag_name.hasPrefix("v0.14.2-beta."),
+                   release.tag_name.hasPrefix(id == "drift" ? "v0.14.2-beta." : "v0.1.0-beta."),
                    let betaBuild = Int(release.tag_name.split(separator: ".").last ?? ""),
                    let installedBuild = Int(bundle?.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""),
                    betaBuild > installedBuild {
@@ -171,7 +171,10 @@ final class GameReleaseInstaller: ObservableObject {
 
     private static func fetchRelease(spec: GameDistribution, beta: Bool) async throws -> GitHubRelease {
         if beta {
-            let url = URL(string: "https://api.github.com/repos/peter-dietrich/vector-drift/releases?per_page=30")!
+            guard ["vector-drift", "vector-swarm"].contains(spec.repo) else {
+                throw GameDownloadError.missingRelease(spec.repo + " beta")
+            }
+            let url = URL(string: "https://api.github.com/repos/peter-dietrich/\(spec.repo)/releases?per_page=30")!
             var request = URLRequest(url: url)
             request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
             request.setValue("FunCityArcade/0.3", forHTTPHeaderField: "User-Agent")
@@ -182,7 +185,7 @@ final class GameReleaseInstaller: ObservableObject {
             let releases = try JSONDecoder().decode([GitHubRelease].self, from: data)
             guard let selected = releases.first(where: {
                 $0.prerelease == true && $0.draft != true
-                && $0.tag_name.hasPrefix("v0.14.2-beta.")
+                && $0.tag_name.hasPrefix(spec.repo == "vector-drift" ? "v0.14.2-beta." : "v0.1.0-beta.")
             }) else { throw GameDownloadError.missingRelease(spec.repo + " beta") }
             return selected
         }
@@ -250,7 +253,7 @@ final class GameReleaseInstaller: ObservableObject {
     /// GitHub prereleases are PUBLIC; never use this for confidential binaries.
     func install(_ id: String, beta: Bool = false) {
         guard let spec = GameDistribution.forGame(id), !isBusy(id) else { return }
-        let useBeta = beta && id == "drift"
+        let useBeta = beta && (id == "drift" || id == "swarm")
         // Query release metadata first. Do not interrupt a running game when
         // it is already the latest installed release.
         Task {
@@ -267,8 +270,8 @@ final class GameReleaseInstaller: ObservableObject {
                     }
                     if useBeta,
                        let oldTag = UserDefaults.standard.string(forKey: receiptKey),
-                       oldTag.hasPrefix("v0.14.2-beta."),
-                       release.tag_name.hasPrefix("v0.14.2-beta."),
+                       oldTag.hasPrefix(id == "drift" ? "v0.14.2-beta." : "v0.1.0-beta."),
+                       release.tag_name.hasPrefix(id == "drift" ? "v0.14.2-beta." : "v0.1.0-beta."),
                        let oldBuild = Int(oldTag.split(separator: ".").last ?? ""),
                        let newBuild = Int(release.tag_name.split(separator: ".").last ?? ""),
                        oldBuild > newBuild {
