@@ -225,7 +225,7 @@ final class GameReleaseInstaller: ObservableObject {
                     downloadAvailable[id] = release.tag_name
                     notice = "\(spec.appName) \(release.tag_name) is published. Select DOWNLOAD GAME to install it."
                 }
-            } catch GameDownloadError.missingRelease {
+            } catch GameDownloadError.missingRelease(_) {
                 if let installed = installedReleaseLabel(id) {
                     notice = "\(installed). No downloadable release is currently visible in this build channel; the installed game is unchanged."
                 } else {
