@@ -102,6 +102,102 @@ final class GameReleaseInstaller: ObservableObject {
     @Published private(set) var status: [String: String] = [:]
     @Published var notice: String?
     @Published var quitPrompt: GameQuitPrompt?
+    @Published private(set) var updateAvailable: [String: String] = [:]
+    @Published private(set) var downloadAvailable: [String: String] = [:]
+    @Published private(set) var checkingUpdates = false
+
+    /// Queries release metadata only: never downloads binaries, quits games,
+    /// or installs anything without an explicit player action.
+    func refreshAvailability(betaForDrift: Bool) async {
+        guard !checkingUpdates else { return }
+        checkingUpdates = true
+        defer { checkingUpdates = false }
+        updateAvailable = [:]
+        downloadAvailable = [:]
+
+        for id in ["drift", "siege", "swarm", "vortex", "barrage", "soar", "aces"] {
+            guard let spec = GameDistribution.forGame(id) else { continue }
+            let beta = betaForDrift && id == "drift"
+            do {
+                let release = try await Self.fetchRelease(spec: spec, beta: beta)
+                let filename = spec.appName + "-macOS.zip"
+                guard release.assets.contains(where: { $0.name == filename }) else { continue }
+
+                guard let local = GameDistribution.installedURL(forBundleID: spec.bundleID) else {
+                    downloadAvailable[id] = release.tag_name
+                    continue
+                }
+                let receipt = UserDefaults.standard.string(forKey: "FunCity.InstalledRelease." + id)
+                if receipt == release.tag_name { continue }
+
+                let remote = String(release.tag_name
+                    .dropFirst(release.tag_name.hasPrefix("v") ? 1 : 0)
+                    .split(separator: "-").first ?? "")
+                let bundle = Bundle(url: local)
+                let installedVersion = bundle?
+                    .object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+                if let installedVersion {
+                    let order = installedVersion.compare(remote, options: .numeric)
+                    if order == .orderedDescending { continue }
+                    if order == .orderedAscending {
+                        updateAvailable[id] = release.tag_name
+                        continue
+                    }
+                }
+                if beta,
+                   release.tag_name.hasPrefix("v0.14.2-beta."),
+                   let betaBuild = Int(release.tag_name.split(separator: ".").last ?? ""),
+                   let installedBuild = Int(bundle?.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? ""),
+                   betaBuild > installedBuild {
+                    updateAvailable[id] = release.tag_name
+                } else if receipt != nil, receipt != release.tag_name {
+                    // Same marketing version can still be a new signed build.
+                    updateAvailable[id] = release.tag_name
+                }
+            } catch {
+                // No release, offline, and API rate-limit states are not proof
+                // that a game is outdated. Preserve local playability.
+                continue
+            }
+        }
+    }
+
+    func actionLabel(for id: String, hasApp: Bool, beta: Bool) -> String {
+        if let state = status[id], state != "READY" { return state }
+        if let tag = updateAvailable[id] { return "UPDATE TO " + tag }
+        if downloadAvailable[id] != nil { return beta ? "BETA: DOWNLOAD GAME" : "DOWNLOAD GAME" }
+        return hasApp ? "CHECK / UPDATE" : (beta ? "BETA: CHECK / INSTALL" : "DOWNLOAD GAME")
+    }
+
+    private static func fetchRelease(spec: GameDistribution, beta: Bool) async throws -> GitHubRelease {
+        if beta {
+            let url = URL(string: "https://api.github.com/repos/peter-dietrich/vector-drift/releases?per_page=30")!
+            var request = URLRequest(url: url)
+            request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+            request.setValue("FunCityArcade/0.3", forHTTPHeaderField: "User-Agent")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                throw GameDownloadError.unexpectedResponse
+            }
+            let releases = try JSONDecoder().decode([GitHubRelease].self, from: data)
+            guard let selected = releases.first(where: {
+                $0.prerelease == true && $0.draft != true
+                && $0.tag_name.hasPrefix("v0.14.2-beta.")
+            }) else { throw GameDownloadError.missingRelease(spec.repo + " beta") }
+            return selected
+        }
+        let url = URL(string: "https://api.github.com/repos/peter-dietrich/\(spec.repo)/releases/latest")!
+        var request = URLRequest(url: url)
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        request.setValue("FunCityArcade/0.3", forHTTPHeaderField: "User-Agent")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw GameDownloadError.unexpectedResponse
+        }
+        if http.statusCode == 404 { throw GameDownloadError.missingRelease(spec.repo) }
+        guard http.statusCode == 200 else { throw GameDownloadError.unexpectedResponse }
+        return try JSONDecoder().decode(GitHubRelease.self, from: data)
+    }
 
     func quitGameAndRetryInstall() {
         guard let prompt = quitPrompt,
@@ -160,37 +256,7 @@ final class GameReleaseInstaller: ObservableObject {
         Task {
             do {
                 status[id] = "CHECKING RELEASE"
-                let release: GitHubRelease
-                if useBeta {
-                    // /releases/latest excludes prereleases. Explicitly select the
-                    // newest public Vector Drift beta without affecting other games.
-                    let url = URL(string: "https://api.github.com/repos/peter-dietrich/vector-drift/releases?per_page=30")!
-                    var request = URLRequest(url: url)
-                    request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-                    request.setValue("FunCity-Beta/0.1", forHTTPHeaderField: "User-Agent")
-                    let (data, response) = try await URLSession.shared.data(for: request)
-                    guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-                        throw GameDownloadError.unexpectedResponse
-                    }
-                    let releases = try JSONDecoder().decode([GitHubRelease].self, from: data)
-                    guard let current = releases.first(where: {
-                        $0.prerelease == true && $0.draft != true
-                        && $0.tag_name.hasPrefix("v0.14.2-beta.")
-                    }) else { throw GameDownloadError.missingRelease(spec.repo + " beta") }
-                    release = current
-                } else {
-                    let url = URL(string: "https://api.github.com/repos/peter-dietrich/\(spec.repo)/releases/latest")!
-                    var request = URLRequest(url: url)
-                    request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-                    request.setValue("FunCity/0.2", forHTTPHeaderField: "User-Agent")
-                    let (data, response) = try await URLSession.shared.data(for: request)
-                    guard let http = response as? HTTPURLResponse else {
-                        throw GameDownloadError.unexpectedResponse
-                    }
-                    if http.statusCode == 404 { throw GameDownloadError.missingRelease(spec.repo) }
-                    guard http.statusCode == 200 else { throw GameDownloadError.unexpectedResponse }
-                    release = try JSONDecoder().decode(GitHubRelease.self, from: data)
-                }
+                let release = try await Self.fetchRelease(spec: spec, beta: useBeta)
                 let receiptKey = "FunCity.InstalledRelease." + id
                 let managedApp = GameDistribution.installedURL(forBundleID: spec.bundleID)
                 if let managedApp {
@@ -290,6 +356,8 @@ final class GameReleaseInstaller: ObservableObject {
                     throw GameDownloadError.invalidBundle
                 }
                 UserDefaults.standard.set(release.tag_name, forKey: receiptKey)
+                updateAvailable.removeValue(forKey: id)
+                downloadAvailable.removeValue(forKey: id)
                 status[id] = "READY"
                 notice = "\(spec.appName) \(release.tag_name) is installed in ~/Applications/Fun City Games. Select PLAY NOW to launch it."
             } catch {
