@@ -6,6 +6,12 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      signed_preview:
+        description: "Sign, notarize and upload a test DMG without publishing a public GitHub Release"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -18,9 +24,10 @@ jobs:
       - name: Build Fun City
         env:
           SPARKLE_PUBLIC_ED_KEY: ${{ secrets.SPARKLE_PUBLIC_ED_KEY }}
+          SIGNED_PREVIEW: ${{ inputs.signed_preview }}
         run: |
           set -euo pipefail
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+          if [[ "$GITHUB_REF" == refs/tags/v* || "$SIGNED_PREVIEW" == "true" ]]; then
             test -n "$SPARKLE_PUBLIC_ED_KEY" || {
               echo "::error::Missing SPARKLE_PUBLIC_ED_KEY. Do not publish a launcher without the updater verification key."
               exit 1
@@ -44,7 +51,7 @@ jobs:
           fi
 
       - name: Package an unsigned developer-preview DMG
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+        if: "!startsWith(github.ref, 'refs/tags/v') && !(github.event_name == 'workflow_dispatch' && inputs.signed_preview)"
         run: |
           mkdir -p "$RUNNER_TEMP/preview" dist
           ditto "$RUNNER_TEMP/derived/Build/Products/Release/FunCity.app" "$RUNNER_TEMP/preview/FunCity.app"
@@ -53,7 +60,7 @@ jobs:
             -format UDZO -ov "dist/FunCity-preview-UNSIGNED.dmg"
 
       - name: Upload unsigned developer preview
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+        if: "!startsWith(github.ref, 'refs/tags/v') && !(github.event_name == 'workflow_dispatch' && inputs.signed_preview)"
         uses: actions/upload-artifact@v4
         with:
           name: FunCity-preview-UNSIGNED
@@ -61,7 +68,7 @@ jobs:
           retention-days: 7
 
       - name: Import Developer ID certificate
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.signed_preview)
         env:
           APPLE_DEVELOPER_ID_CERT_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_CERT_BASE64 }}
           APPLE_DEVELOPER_ID_CERT_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_CERT_PASSWORD }}
@@ -82,7 +89,7 @@ jobs:
             -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
 
       - name: Sign and notarize the app, then make a DMG
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.signed_preview)
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -99,24 +106,47 @@ jobs:
             --sign "$APPLE_SIGNING_IDENTITY" "$APP"
           codesign --verify --deep --strict --verbose=2 "$APP"
           ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarization.zip"
-          xcrun notarytool submit "$RUNNER_TEMP/notarization.zip" \
-            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
-            --password "$APPLE_APP_SPECIFIC_PASSWORD" --wait
+          # Transient Apple API and CloudKit errors previously blocked game releases.
+          # Retry boundedly, but never publish unless notarization and validation succeed.
+          notarize() {
+            local file="$1" attempt
+            for attempt in 1 2 3 4; do
+              if xcrun notarytool submit "$file" \
+                --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
+                --password "$APPLE_APP_SPECIFIC_PASSWORD" --wait; then return 0; fi
+              if [[ "$attempt" == "4" ]]; then
+                echo "::error::Notarization failed after four attempts for $file"
+                return 1
+              fi
+              sleep $((attempt * 20))
+            done
+          }
+          validate_staple() {
+            local file="$1" attempt
+            for attempt in 1 2 3 4; do
+              if xcrun stapler validate "$file"; then return 0; fi
+              if [[ "$attempt" == "4" ]]; then
+                echo "::error::Staple validation failed after four attempts for $file"
+                return 1
+              fi
+              sleep $((attempt * 15))
+            done
+          }
+          notarize "$RUNNER_TEMP/notarization.zip"
           xcrun stapler staple "$APP"
-          xcrun stapler validate "$APP"
+          validate_staple "$APP"
           mkdir -p "$RUNNER_TEMP/dmgroot" dist
           ditto "$APP" "$RUNNER_TEMP/dmgroot/FunCity.app"
           ln -s /Applications "$RUNNER_TEMP/dmgroot/Applications"
           hdiutil create -volname "Fun City Arcade" -srcfolder "$RUNNER_TEMP/dmgroot" \
             -format UDZO -ov "dist/FunCity-macOS.dmg"
-          xcrun notarytool submit "dist/FunCity-macOS.dmg" \
-            --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
-            --password "$APPLE_APP_SPECIFIC_PASSWORD" --wait
+          notarize "dist/FunCity-macOS.dmg"
           xcrun stapler staple "dist/FunCity-macOS.dmg"
+          validate_staple "dist/FunCity-macOS.dmg"
           (cd dist && shasum -a 256 FunCity-macOS.dmg > FunCity-macOS.dmg.sha256)
 
       - name: Create EdDSA-signed Sparkle appcast
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.signed_preview)
         env:
           SPARKLE_EDDSA_PRIVATE_KEY: ${{ secrets.SPARKLE_EDDSA_PRIVATE_KEY }}
         run: |
@@ -188,3 +218,14 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             "dist/FunCity-macOS.dmg" "dist/FunCity-macOS.dmg.sha256" "dist/appcast.xml" \
             --title "Fun City $GITHUB_REF_NAME" --generate-notes
+
+      - name: Upload signed private test artifact (never publish)
+        if: github.event_name == 'workflow_dispatch' && inputs.signed_preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: FunCity-signed-preview-NOT-FOR-DISTRIBUTION
+          path: |
+            dist/FunCity-macOS.dmg
+            dist/FunCity-macOS.dmg.sha256
+            dist/appcast.xml
+          retention-days: 3
