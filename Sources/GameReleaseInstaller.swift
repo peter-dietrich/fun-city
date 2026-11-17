@@ -76,7 +76,7 @@ enum GameDownloadError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingRelease(let repo):
-            return "No downloadable release is published for \(repo) yet. The game developer must publish a release before it can be installed."
+            return "No signed downloadable game release is available for \(repo) in this build channel yet. The game has not been installed."
         case .unexpectedResponse: return "GitHub did not return a successful download response."
         case .missingPackage: return "The release has no matching macOS game ZIP."
         case .invalidAssetURL: return "The download address did not match the official game repository."
