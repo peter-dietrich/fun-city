@@ -96,6 +96,14 @@ struct GameQuitPrompt {
     let appName: String
 }
 
+/// Publication state for each game. A failed API lookup is not the same as
+/// a verified absence of a downloadable release.
+enum GameReleaseLookupState {
+    case published
+    case notPublished
+    case unavailable
+}
+
 @MainActor
 final class GameReleaseInstaller: ObservableObject {
     @Published private(set) var status: [String: String] = [:]
@@ -104,6 +112,7 @@ final class GameReleaseInstaller: ObservableObject {
     @Published private(set) var updateAvailable: [String: String] = [:]
     @Published private(set) var downloadAvailable: [String: String] = [:]
     @Published private(set) var checkingUpdates = false
+    @Published private(set) var releaseLookup: [String: GameReleaseLookupState] = [:]
 
     /// Queries release metadata only: never downloads binaries, quits games,
     /// or installs anything without an explicit player action.
@@ -113,13 +122,18 @@ final class GameReleaseInstaller: ObservableObject {
         defer { checkingUpdates = false }
         updateAvailable = [:]
         downloadAvailable = [:]
+        releaseLookup = [:]
 
         for id in ["drift", "siege", "swarm", "vortex", "barrage", "soar", "aces"] {
             guard let spec = GameDistribution.forGame(id) else { continue }
             do {
                 let release = try await Self.fetchRelease(spec: spec)
                 let filename = spec.appName + "-macOS.zip"
-                guard release.assets.contains(where: { $0.name == filename }) else { continue }
+                guard release.assets.contains(where: { $0.name == filename }) else {
+                    releaseLookup[id] = .unavailable
+                    continue
+                }
+                releaseLookup[id] = .published
 
                 guard let local = GameDistribution.installedURL(forBundleID: spec.bundleID) else {
                     downloadAvailable[id] = release.tag_name
@@ -150,10 +164,12 @@ final class GameReleaseInstaller: ObservableObject {
                     // Same marketing version, different signed release.
                     updateAvailable[id] = release.tag_name
                 }
+            } catch GameDownloadError.missingRelease(_) {
+                releaseLookup[id] = .notPublished
             } catch {
-                // No release, offline, and API rate-limit states are not proof
-                // that a game is outdated. Preserve local playability.
-                continue
+                // Offline and rate-limit states must never be shown as
+                // confirmation that a game has no published release.
+                releaseLookup[id] = .unavailable
             }
         }
     }
@@ -182,6 +198,7 @@ final class GameReleaseInstaller: ObservableObject {
                 guard release.assets.contains(where: { $0.name == spec.appName + "-macOS.zip" }) else {
                     throw GameDownloadError.missingPackage
                 }
+                releaseLookup[id] = .published
                 if let installedApp = GameDistribution.installedURL(forBundleID: spec.bundleID) {
                     let receipt = UserDefaults.standard.string(forKey: "FunCity.InstalledRelease." + id)
                     if receipt == release.tag_name {
@@ -226,12 +243,14 @@ final class GameReleaseInstaller: ObservableObject {
                     notice = "\(spec.appName) \(release.tag_name) is published. Select DOWNLOAD GAME to install it."
                 }
             } catch GameDownloadError.missingRelease(_) {
+                releaseLookup[id] = .notPublished
                 if let installed = installedReleaseLabel(id) {
                     notice = "\(installed). No downloadable release is currently visible in this build channel; the installed game is unchanged."
                 } else {
                     notice = "\(spec.appName) does not yet have a published downloadable release in this build channel. Nothing was installed."
                 }
             } catch {
+                releaseLookup[id] = .unavailable
                 if let installed = installedReleaseLabel(id) {
                     notice = "\(installed). The GitHub release check could not complete: \(error.localizedDescription). Your installed game is unchanged."
                 } else {
