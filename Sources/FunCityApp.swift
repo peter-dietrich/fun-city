@@ -431,6 +431,20 @@ private struct ArcadeLobby: View {
                 .frame(width: 300, height: 210)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             VStack(alignment: .leading, spacing: 10) {
+                featuredDetails(game)
+                Spacer(minLength: 0)
+                featuredActions(game)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, minHeight: 246)
+        .background(Color(red: 0.07, green: 0.08, blue: 0.15), in: RoundedRectangle(cornerRadius: 17))
+        .overlay(RoundedRectangle(cornerRadius: 17).stroke(game.accent.opacity(0.27)))
+    }
+
+    @ViewBuilder
+    private func featuredDetails(_ game: ArcadeGame) -> some View {
                 Text("NOW SELECTED  //  CABINET")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .tracking(2).foregroundStyle(game.accent)
@@ -465,7 +479,10 @@ private struct ArcadeLobby: View {
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundStyle(.cyan)
                 }
-                Spacer(minLength: 0)
+
+    }
+
+    private func featuredActions(_ game: ArcadeGame) -> some View {
                 HStack(spacing: 10) {
                     Button {
                         ArcadeChime.shared.play()
@@ -511,14 +528,8 @@ private struct ArcadeLobby: View {
                         .help("Remove cabinet, not the app itself")
                     }
                 }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, minHeight: 246)
-        .background(Color(red: 0.07, green: 0.08, blue: 0.15), in: RoundedRectangle(cornerRadius: 17))
-        .overlay(RoundedRectangle(cornerRadius: 17).stroke(game.accent.opacity(0.27)))
     }
+
 }
 
 private struct CabinetCard: View {
