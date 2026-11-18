@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 @main
 struct FunCityApp: App {
+    @NSApplicationDelegateAdaptor(ArcadeIconAppDelegate.self) private var iconDelegate
     @StateObject private var launcherUpdater = FunCityLauncherUpdater.shared
 
     var body: some Scene {
