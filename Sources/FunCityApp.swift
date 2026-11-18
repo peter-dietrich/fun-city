@@ -13,6 +13,7 @@ struct FunCityApp: App {
         }
         .defaultSize(width: 1100, height: 770)
         .commands { 
+            GameHelpCommands()
             CommandGroup(replacing: .newItem) {}
             CommandGroup(after: .appInfo) {
                 Button("Check for Fun City Updates…") {
