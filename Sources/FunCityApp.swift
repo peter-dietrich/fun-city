@@ -96,15 +96,16 @@ private final class ArcadeLibrary: ObservableObject {
     }
 
     func location(for game: ArcadeGame) -> URL? {
-        // Prefer the managed app we just downloaded over an older Xcode build.
-        if let identifier = game.bundleID,
-           let managed = GameDistribution.installedURL(forBundleID: identifier) {
-            return managed
-        }
+        // An explicitly selected application always wins, including a developer
+        // build in DerivedData. Managed releases are the default only when there
+        // is no valid explicit selection.
         if let path = game.appPath {
             let url = URL(fileURLWithPath: path)
             if url.pathExtension.lowercased() == "app",
-               FileManager.default.fileExists(atPath: url.path) { return url }
+               FileManager.default.fileExists(atPath: url.path),
+               Bundle(url: url)?.bundleIdentifier == game.bundleID {
+                return url
+            }
         }
         if let identifier = game.bundleID {
             return GameDistribution.installedURL(forBundleID: identifier)
@@ -443,6 +444,16 @@ private struct ArcadeLobby: View {
                     Label(version, systemImage: "checkmark.seal.fill")
                         .font(.system(size: 10, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.green)
+                }
+                if let selectedApp = library.location(for: game) {
+                    let bundle = Bundle(url: selectedApp)
+                    let version = bundle?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+                    let build = bundle?.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
+                    Text("PLAY TARGET: " + selectedApp.path + "  •  v" + version + " (" + build + ")")
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundStyle(.cyan.opacity(0.8))
+                        .lineLimit(2)
+                        .textSelection(.enabled)
                 }
                 if let tag = installer.updateAvailable[game.id] {
                     Label("UPDATE AVAILABLE: " + tag, systemImage: "arrow.down.circle.fill")
