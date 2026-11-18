@@ -219,11 +219,11 @@ jobs:
             "dist/FunCity-macOS.dmg" "dist/FunCity-macOS.dmg.sha256" "dist/appcast.xml" \
             --title "Fun City $GITHUB_REF_NAME" --generate-notes
 
-      - name: Upload signed private test artifact (never publish)
+      - name: Upload signed CI test artifact (not a GitHub Release)
         if: github.event_name == 'workflow_dispatch' && inputs.signed_preview
         uses: actions/upload-artifact@v4
         with:
-          name: FunCity-signed-preview-NOT-FOR-DISTRIBUTION
+          name: FunCity-signed-CI-preview-NOT-FOR-DISTRIBUTION
           path: |
             dist/FunCity-macOS.dmg
             dist/FunCity-macOS.dmg.sha256
