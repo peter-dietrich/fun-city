@@ -6,7 +6,7 @@
  objects = {
   FC0DE0000000000000000065 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/GameHelp.swift; sourceTree = "<group>"; };
   FC0DE0000000000000000066 = { isa = PBXBuildFile; fileRef = FC0DE0000000000000000065; };
-  FC0DE0000000000000000067 = { isa = PBXShellScriptBuildPhase; buildActionMask = 2147483647; files = (); inputPaths = ("$(PROJECT_DIR)/scripts/generate-app-icon.swift"); outputPaths = ("$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/AppIcon.icns"); runOnlyForDeploymentPostprocessing = 0; shellPath = /bin/sh; shellScript = "set -eu\n/usr/bin/swift \"$PROJECT_DIR/scripts/generate-app-icon.swift\" \"fun-city\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/AppIcon.icns\"\n"; };
+  FC0DE0000000000000000067 = { isa = PBXShellScriptBuildPhase; buildActionMask = 2147483647; files = (); inputPaths = ("$(PROJECT_DIR)/scripts/generate-app-icon.swift"); outputPaths = ("$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/AppIcon.icns"); runOnlyForDeploymentPostprocessing = 0; shellPath = /bin/sh; shellScript = "set -eu\n/usr/bin/swift \"$PROJECT_DIR/scripts/generate-app-icon.swift\" \"fun-city\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/AppIcon.icns\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleIconFile AppIcon\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\" 2>/dev/null || /usr/libexec/PlistBuddy -c \"Add :CFBundleIconFile string AppIcon\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n"; };
   A0000000000000000000000F = { isa = PBXBuildFile; fileRef = A00000000000000000000010; };
   A00000000000000000000011 = { isa = PBXBuildFile; fileRef = A00000000000000000000012; };
   A00000000000000000000013 = { isa = PBXBuildFile; fileRef = A00000000000000000000014; };
