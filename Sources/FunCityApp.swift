@@ -443,43 +443,69 @@ private struct ArcadeLobby: View {
         .overlay(RoundedRectangle(cornerRadius: 17).stroke(game.accent.opacity(0.27)))
     }
 
-    @ViewBuilder
     private func featuredDetails(_ game: ArcadeGame) -> some View {
-                Text("NOW SELECTED  //  CABINET")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
-                    .tracking(2).foregroundStyle(game.accent)
-                Text(game.title)
-                    .font(.system(size: 30, weight: .black, design: .monospaced))
-                    .lineLimit(1).minimumScaleFactor(0.6)
-                Text(game.description)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.white.opacity(0.62))
-                if let version = installer.installedReleaseLabel(game.id) {
-                    Label(version, systemImage: "checkmark.seal.fill")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(.green)
-                }
-                if let selectedApp = library.location(for: game) {
-                    let bundle = Bundle(url: selectedApp)
-                    let version = bundle?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
-                    let build = bundle?.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
-                    Text("PLAY TARGET: " + selectedApp.path + "  •  v" + version + " (" + build + ")")
-                        .font(.system(size: 9, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.cyan.opacity(0.8))
-                        .lineLimit(2)
-                        .textSelection(.enabled)
-                }
-                if let tag = installer.updateAvailable[game.id] {
-                    Label("UPDATE AVAILABLE: " + tag, systemImage: "arrow.down.circle.fill")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.orange)
-                } else if installer.downloadAvailable[game.id] != nil,
-                          GameDistribution.installedURL(forBundleID: game.bundleID ?? "") == nil {
-                    Label("DOWNLOAD AVAILABLE", systemImage: "icloud.and.arrow.down")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.cyan)
-                }
+        VStack(alignment: .leading, spacing: 10) {
+            featuredTitle(game)
+            featuredInstalledVersion(game)
+            featuredLaunchTarget(game)
+            featuredUpdateStatus(game)
+        }
+    }
 
+    private func featuredTitle(_ game: ArcadeGame) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("NOW SELECTED  //  CABINET")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .tracking(2).foregroundStyle(game.accent)
+            Text(game.title)
+                .font(.system(size: 30, weight: .black, design: .monospaced))
+                .lineLimit(1).minimumScaleFactor(0.6)
+            Text(game.description)
+                .font(.system(size: 13))
+                .foregroundStyle(.white.opacity(0.62))
+        }
+    }
+
+    @ViewBuilder
+    private func featuredInstalledVersion(_ game: ArcadeGame) -> some View {
+        if let version = installer.installedReleaseLabel(game.id) {
+            Label(version, systemImage: "checkmark.seal.fill")
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.green)
+        }
+    }
+
+    private func launchTargetText(for game: ArcadeGame) -> String? {
+        guard let selectedApp = library.location(for: game) else { return nil }
+        let bundle = Bundle(url: selectedApp)
+        let version = bundle?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+        let build = bundle?.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown"
+        return "PLAY TARGET: " + selectedApp.path + "  •  v" + version + " (" + build + ")"
+    }
+
+    @ViewBuilder
+    private func featuredLaunchTarget(_ game: ArcadeGame) -> some View {
+        if let target = launchTargetText(for: game) {
+            Text(target)
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(.cyan.opacity(0.8))
+                .lineLimit(2)
+                .textSelection(.enabled)
+        }
+    }
+
+    @ViewBuilder
+    private func featuredUpdateStatus(_ game: ArcadeGame) -> some View {
+        if let tag = installer.updateAvailable[game.id] {
+            Label("UPDATE AVAILABLE: " + tag, systemImage: "arrow.down.circle.fill")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundStyle(.orange)
+        } else if installer.downloadAvailable[game.id] != nil,
+                  GameDistribution.installedURL(forBundleID: game.bundleID ?? "") == nil {
+            Label("DOWNLOAD AVAILABLE", systemImage: "icloud.and.arrow.down")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundStyle(.cyan)
+        }
     }
 
     private func featuredActions(_ game: ArcadeGame) -> some View {
