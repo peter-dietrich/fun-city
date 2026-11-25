@@ -1,102 +1,331 @@
 // !$*UTF8*$!
 {
- archiveVersion = 1;
- classes = {};
- objectVersion = 56;
- objects = {
-  FC0DE0000000000000000065 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/GameHelp.swift; sourceTree = "<group>"; };
-  FC0DE0000000000000000066 = { isa = PBXBuildFile; fileRef = FC0DE0000000000000000065; };
-  FC0DE0000000000000000067 = { isa = PBXShellScriptBuildPhase; buildActionMask = 2147483647; files = (); inputPaths = ("$(PROJECT_DIR)/scripts/generate-app-icon.swift"); outputPaths = ("$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/AppIcon.icns"); runOnlyForDeploymentPostprocessing = 0; shellPath = /bin/sh; shellScript = "set -eu\n/usr/bin/swift \"$PROJECT_DIR/scripts/generate-app-icon.swift\" \"fun-city\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/AppIcon.icns\"\n"; };
-  A0000000000000000000000F = { isa = PBXBuildFile; fileRef = A00000000000000000000010; };
-  A00000000000000000000011 = { isa = PBXBuildFile; fileRef = A00000000000000000000012; };
-  A00000000000000000000013 = { isa = PBXBuildFile; fileRef = A00000000000000000000014; };
-  A00000000000000000000015 = { isa = PBXBuildFile; fileRef = A00000000000000000000016; };
-  A00000000000000000000017 = { isa = PBXBuildFile; productRef = A00000000000000000000018; };
-  A00000000000000000000010 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/GameReleaseInstaller.swift; sourceTree = "<group>"; };
-  A00000000000000000000012 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/FunCityOriginStory.swift; sourceTree = "<group>"; };
-  A00000000000000000000014 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/FunCityHighScores.swift; sourceTree = "<group>"; };
-  A00000000000000000000016 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/FunCityLauncherUpdater.swift; sourceTree = "<group>"; };
-  A00000000000000000000001 = { isa = PBXBuildFile; fileRef = A00000000000000000000002; };
-  A00000000000000000000002 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/FunCityApp.swift; sourceTree = "<group>"; };
-  A00000000000000000000003 = { isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FunCity.app; sourceTree = BUILT_PRODUCTS_DIR; };
-  A00000000000000000000004 = { isa = PBXGroup; children = (FC0DE0000000000000000065, A00000000000000000000002, A00000000000000000000010, A00000000000000000000012, A00000000000000000000014, A00000000000000000000016, A00000000000000000000005); sourceTree = "<group>"; };
-  A00000000000000000000005 = { isa = PBXGroup; children = (A00000000000000000000003); name = Products; sourceTree = "<group>"; };
-  A00000000000000000000006 = { isa = PBXNativeTarget; buildConfigurationList = A00000000000000000000009; buildPhases = (A00000000000000000000008, A00000000000000000000019, FC0DE0000000000000000067); packageProductDependencies = (A00000000000000000000018); buildRules = (); dependencies = (); name = FunCity; productName = FunCity; productReference = A00000000000000000000003; productType = "com.apple.product-type.application"; };
-  A00000000000000000000007 = {
-   isa = PBXProject;
-   attributes = { LastUpgradeCheck = 1600; TargetAttributes = { A00000000000000000000006 = { CreatedOnToolsVersion = 16.0; }; }; };
-   buildConfigurationList = A0000000000000000000000A;
-   compatibilityVersion = "Xcode 14.0";
-   developmentRegion = en;
-   hasScannedForEncodings = 0;
-   knownRegions = (en, Base);
-   mainGroup = A00000000000000000000004;
-   productRefGroup = A00000000000000000000005;
-   projectDirPath = "";
-   projectRoot = "";
-   targets = (A00000000000000000000006);
-   packageReferences = (A0000000000000000000001A);
-  };
-  A00000000000000000000008 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (FC0DE0000000000000000066, A00000000000000000000001, A0000000000000000000000F, A00000000000000000000011, A00000000000000000000013, A00000000000000000000015); runOnlyForDeploymentPostprocessing = 0; };
-  A00000000000000000000019 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (A00000000000000000000017); runOnlyForDeploymentPostprocessing = 0; };
-  A0000000000000000000001A = { isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/sparkle-project/Sparkle"; requirement = { kind = exactVersion; version = 2.10.1; }; };
-  A00000000000000000000018 = { isa = XCSwiftPackageProductDependency; package = A0000000000000000000001A; productName = Sparkle; };
-  A00000000000000000000009 = { isa = XCConfigurationList; buildConfigurations = (A0000000000000000000000B, A0000000000000000000000C); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-  A0000000000000000000000A = { isa = XCConfigurationList; buildConfigurations = (A0000000000000000000000D, A0000000000000000000000E); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
-  A0000000000000000000000B = { isa = XCBuildConfiguration; buildSettings = {
-   CODE_SIGNING_ALLOWED = NO;
-   GENERATE_INFOPLIST_FILE = YES;
-   INFOPLIST_KEY_CFBundleDisplayName = "Fun City Arcade";
-   INFOPLIST_KEY_CFBundleIconFile = AppIcon;
-   ENABLE_USER_SCRIPT_SANDBOXING = NO;
-   INFOPLIST_KEY_SUPublicEDKey = "$(SPARKLE_PUBLIC_ED_KEY)";
-   INFOPLIST_KEY_SUFeedURL = "https://github.com/peter-dietrich/fun-city/releases/latest/download/appcast.xml";
-   INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-   INFOPLIST_KEY_SUScheduledCheckInterval = 86400;
-   MARKETING_VERSION = 0.4.0;
-   CURRENT_PROJECT_VERSION = 27;
-   INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
-   MACOSX_DEPLOYMENT_TARGET = 13.0;
-   PRODUCT_BUNDLE_IDENTIFIER = "io.funcity.arcade";
-   PRODUCT_NAME = "$(TARGET_NAME)";
-   SUPPORTED_PLATFORMS = macosx;
-   SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-   SWIFT_VERSION = 5.0;
-  }; name = Debug; };
-  A0000000000000000000000C = { isa = XCBuildConfiguration; buildSettings = {
-   CODE_SIGNING_ALLOWED = NO;
-   GENERATE_INFOPLIST_FILE = YES;
-   INFOPLIST_KEY_CFBundleDisplayName = "Fun City Arcade";
-   INFOPLIST_KEY_CFBundleIconFile = AppIcon;
-   ENABLE_USER_SCRIPT_SANDBOXING = NO;
-   INFOPLIST_KEY_SUPublicEDKey = "$(SPARKLE_PUBLIC_ED_KEY)";
-   INFOPLIST_KEY_SUFeedURL = "https://github.com/peter-dietrich/fun-city/releases/latest/download/appcast.xml";
-   INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
-   INFOPLIST_KEY_SUScheduledCheckInterval = 86400;
-   MARKETING_VERSION = 0.4.0;
-   CURRENT_PROJECT_VERSION = 27;
-   INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
-   MACOSX_DEPLOYMENT_TARGET = 13.0;
-   PRODUCT_BUNDLE_IDENTIFIER = "io.funcity.arcade";
-   PRODUCT_NAME = "$(TARGET_NAME)";
-   SUPPORTED_PLATFORMS = macosx;
-   SWIFT_OPTIMIZATION_LEVEL = "-O";
-   SWIFT_VERSION = 5.0;
-  }; name = Release; };
-  A0000000000000000000000D = { isa = XCBuildConfiguration; buildSettings = {
-   CODE_SIGNING_ALLOWED = NO;
-   SDKROOT = macosx;
-   MACOSX_DEPLOYMENT_TARGET = 13.0;
-   SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-   SWIFT_VERSION = 5.0;
-  }; name = Debug; };
-  A0000000000000000000000E = { isa = XCBuildConfiguration; buildSettings = {
-   CODE_SIGNING_ALLOWED = NO;
-   SDKROOT = macosx;
-   MACOSX_DEPLOYMENT_TARGET = 13.0;
-   SWIFT_OPTIMIZATION_LEVEL = "-O";
-   SWIFT_VERSION = 5.0;
-  }; name = Release; };
- };
- rootObject = A00000000000000000000007;
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A00000000000000000000001 /* Sources/FunCityApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000002 /* Sources/FunCityApp.swift */; };
+		A0000000000000000000000F /* Sources/GameReleaseInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000010 /* Sources/GameReleaseInstaller.swift */; };
+		A00000000000000000000011 /* Sources/FunCityOriginStory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000012 /* Sources/FunCityOriginStory.swift */; };
+		A00000000000000000000013 /* Sources/FunCityHighScores.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000014 /* Sources/FunCityHighScores.swift */; };
+		A00000000000000000000015 /* Sources/FunCityLauncherUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000016 /* Sources/FunCityLauncherUpdater.swift */; };
+		A00000000000000000000017 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = A00000000000000000000018 /* Sparkle */; };
+		FC0DE0000000000000000066 /* Sources/GameHelp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC0DE0000000000000000065 /* Sources/GameHelp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A00000000000000000000002 /* Sources/FunCityApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/FunCityApp.swift; sourceTree = "<group>"; };
+		A00000000000000000000003 /* FunCity.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FunCity.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A00000000000000000000010 /* Sources/GameReleaseInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/GameReleaseInstaller.swift; sourceTree = "<group>"; };
+		A00000000000000000000012 /* Sources/FunCityOriginStory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/FunCityOriginStory.swift; sourceTree = "<group>"; };
+		A00000000000000000000014 /* Sources/FunCityHighScores.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/FunCityHighScores.swift; sourceTree = "<group>"; };
+		A00000000000000000000016 /* Sources/FunCityLauncherUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/FunCityLauncherUpdater.swift; sourceTree = "<group>"; };
+		FC0DE0000000000000000065 /* Sources/GameHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/GameHelp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A00000000000000000000019 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A00000000000000000000017 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A00000000000000000000004 = {
+			isa = PBXGroup;
+			children = (
+				FC0DE0000000000000000065 /* Sources/GameHelp.swift */,
+				A00000000000000000000002 /* Sources/FunCityApp.swift */,
+				A00000000000000000000010 /* Sources/GameReleaseInstaller.swift */,
+				A00000000000000000000012 /* Sources/FunCityOriginStory.swift */,
+				A00000000000000000000014 /* Sources/FunCityHighScores.swift */,
+				A00000000000000000000016 /* Sources/FunCityLauncherUpdater.swift */,
+				A00000000000000000000005 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A00000000000000000000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A00000000000000000000003 /* FunCity.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A00000000000000000000006 /* FunCity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A00000000000000000000009 /* Build configuration list for PBXNativeTarget "FunCity" */;
+			buildPhases = (
+				A00000000000000000000008 /* Sources */,
+				A00000000000000000000019 /* Frameworks */,
+				FC0DE0000000000000000067 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FunCity;
+			packageProductDependencies = (
+				A00000000000000000000018 /* Sparkle */,
+			);
+			productName = FunCity;
+			productReference = A00000000000000000000003 /* FunCity.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A00000000000000000000007 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					A00000000000000000000006 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = A0000000000000000000000A /* Build configuration list for PBXProject "FunCity" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A00000000000000000000004;
+			packageReferences = (
+				A0000000000000000000001A /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
+			productRefGroup = A00000000000000000000005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A00000000000000000000006 /* FunCity */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		FC0DE0000000000000000067 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(PROJECT_DIR)/scripts/generate-app-icon.swift",
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/AppIcon.icns",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -eu\n/usr/bin/swift \"$PROJECT_DIR/scripts/generate-app-icon.swift\" \"fun-city\" \"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/AppIcon.icns\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A00000000000000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FC0DE0000000000000000066 /* Sources/GameHelp.swift in Sources */,
+				A00000000000000000000001 /* Sources/FunCityApp.swift in Sources */,
+				A0000000000000000000000F /* Sources/GameReleaseInstaller.swift in Sources */,
+				A00000000000000000000011 /* Sources/FunCityOriginStory.swift in Sources */,
+				A00000000000000000000013 /* Sources/FunCityHighScores.swift in Sources */,
+				A00000000000000000000015 /* Sources/FunCityLauncherUpdater.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A0000000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CURRENT_PROJECT_VERSION = 27;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fun City Arcade";
+				INFOPLIST_KEY_CFBundleIconFile = AppIcon;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
+				INFOPLIST_KEY_SUFeedURL = "https://github.com/peter-dietrich/fun-city/releases/latest/download/appcast.xml";
+				INFOPLIST_KEY_SUPublicEDKey = "$(SPARKLE_PUBLIC_ED_KEY)";
+				INFOPLIST_KEY_SUScheduledCheckInterval = 86400;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.funcity.arcade;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A0000000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CURRENT_PROJECT_VERSION = 27;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Fun City Arcade";
+				INFOPLIST_KEY_CFBundleIconFile = AppIcon;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
+				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
+				INFOPLIST_KEY_SUFeedURL = "https://github.com/peter-dietrich/fun-city/releases/latest/download/appcast.xml";
+				INFOPLIST_KEY_SUPublicEDKey = "$(SPARKLE_PUBLIC_ED_KEY)";
+				INFOPLIST_KEY_SUScheduledCheckInterval = 86400;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.4.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.funcity.arcade;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A0000000000000000000000D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A0000000000000000000000E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A00000000000000000000009 /* Build configuration list for PBXNativeTarget "FunCity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0000000000000000000000B /* Debug */,
+				A0000000000000000000000C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0000000000000000000000A /* Build configuration list for PBXProject "FunCity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0000000000000000000000D /* Debug */,
+				A0000000000000000000000E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A0000000000000000000001A /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.10.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A00000000000000000000018 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A0000000000000000000001A /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A00000000000000000000007 /* Project object */;
 }
